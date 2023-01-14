@@ -34,7 +34,7 @@ COPY --from=deps /myapp/node_modules /myapp/node_modules
 
 ADD prisma .
 RUN npx prisma generate
-COPY --from=build /myapp/build/tmp /myapp
+COPY /myapp/build/tmp /myapp
 
 
 ADD . .
