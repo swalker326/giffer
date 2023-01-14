@@ -6,15 +6,6 @@ import * as path from "path";
 const execAsync = promisify(exec);
 
 export async function movToGif(file: Blob) {
-  // try {
-  //   const imageBuffer = await file.arrayBuffer();
-  //   const ffmpeg = spawn("ffmpeg", ["-i", "-", "testing.gif"]);
-
-  //   ffmpeg.stdin.write(Buffer.from(imageBuffer));
-  //   ffmpeg.stdin.end();
-  // } catch (e) {
-  //   console.error(e);
-  // }
   const imageBuffer = await file.arrayBuffer();
   const fileName = file.name.split(".")[0];
   const outputPath = "tmp/output/";

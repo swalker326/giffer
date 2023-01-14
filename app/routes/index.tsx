@@ -1,30 +1,21 @@
-import type { ActionArgs, LoaderArgs } from "@remix-run/node";
+import type { ActionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { convertMovToGif } from "~/models/file.server";
-
-export async function loader({ request }: LoaderArgs) {
-  //get form data from request
-  // console.log(request);
-  return json({ response: "hello" });
-}
 
 export async function action({ request }: ActionArgs) {
   const body = await request.formData();
   const file = body.get("file") as File;
   const gif = await convertMovToGif(file);
   if (!gif) return json({ error: "Could not convert file" }, { status: 500 });
-  // console.log("gif in action: ", gif);
   return json({ gif });
 }
 
 export default function Index() {
   const fetcher = useFetcher();
   const [isLoading, setIsLoading] = useState(false);
-  const [file, setFile] = useState<string>(
-    "https://images.unsplash.com/photo-1673728232461-f8503f253b02?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2671&q=80"
-  );
+  const [file, setFile] = useState<string>();
   const [fileSelected, setFileSelected] = useState(false);
   const [linkHovered, setLinkHovered] = useState(false);
 
@@ -53,7 +44,6 @@ export default function Index() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    console.log(file);
     if (file) {
       setFileSelected(true);
     }
