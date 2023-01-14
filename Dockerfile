@@ -34,7 +34,6 @@ COPY --from=deps /myapp/node_modules /myapp/node_modules
 
 ADD prisma .
 RUN npx prisma generate
-RUN cp -r /myapp/build/tmp /myapp
 
 
 ADD . .
@@ -60,6 +59,6 @@ COPY --from=build /myapp/public /myapp/public
 COPY --from=build /myapp/package.json /myapp/package.json
 COPY --from=build /myapp/start.sh /myapp/start.sh
 COPY --from=build /myapp/prisma /myapp/prisma
-RUN cp -r /myapp/tmp /myapp/build
+RUN mkdir -p /myapp/build/input /myapp/build/output
 
 ENTRYPOINT [ "./start.sh" ]
