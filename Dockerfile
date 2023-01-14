@@ -34,7 +34,7 @@ COPY --from=deps /myapp/node_modules /myapp/node_modules
 
 ADD prisma .
 RUN npx prisma generate
-COPY /myapp/build/tmp /myapp
+RUN cp -r /myapp/build/tmp /myapp
 
 
 ADD . .
@@ -52,7 +52,7 @@ RUN echo "#!/bin/sh\nset -x\nsqlite3 \$DATABASE_URL" > /usr/local/bin/database-c
 
 WORKDIR /myapp
 
-COPY /myapp/tmp /myapp/build
+RUN cp -r /myapp/tmp /myapp/build
 COPY --from=production-deps /myapp/node_modules /myapp/node_modules
 COPY --from=build /myapp/node_modules/.prisma /myapp/node_modules/.prisma
 
