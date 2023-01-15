@@ -3,7 +3,7 @@ import { json } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
 import { convertMovToGif } from "~/models/file.server";
-import loop from "../../public/assets/wilma.gif";
+import loop from "../../public/assets/loop.gif";
 
 export async function action({ request }: ActionArgs) {
   const body = await request.formData();
@@ -20,7 +20,6 @@ export default function Index() {
   const [file, setFile] = useState<string>(loop);
   // "https://images.unsplash.com/photo-1671312870850-06d22098ace8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1035&q=80"
   const [fileSelected, setFileSelected] = useState(false);
-  const [linkHovered, setLinkHovered] = useState(false);
 
   function base64ToImgUrl(base64: string): string {
     const binaryString = atob(base64);
@@ -110,11 +109,7 @@ export default function Index() {
           </div>
         </fetcher.Form>
         {file && (
-          <div
-            className="group mt-4 flex w-full items-start justify-center"
-            onMouseEnter={() => setLinkHovered(true)}
-            onMouseLeave={() => setLinkHovered(false)}
-          >
+          <div className="group mt-4 flex w-full items-start justify-center">
             <a className="relative" download href={file}>
               <button className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-md bg-purple-600 py-2 px-4 font-medium text-white transition-opacity duration-700 ease-in-out md:opacity-0 md:group-hover:opacity-70">
                 Download
