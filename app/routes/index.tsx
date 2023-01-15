@@ -3,6 +3,7 @@ import { json } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
 import { convertMovToGif } from "~/models/file.server";
+import loop from "../../public/assets/wilma.gif";
 
 export async function action({ request }: ActionArgs) {
   const body = await request.formData();
@@ -16,9 +17,8 @@ export default function Index() {
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [file, setFile] = useState<string>(
-    "https://images.unsplash.com/photo-1671312870850-06d22098ace8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1035&q=80"
-  );
+  const [file, setFile] = useState<string>(loop);
+  // "https://images.unsplash.com/photo-1671312870850-06d22098ace8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1035&q=80"
   const [fileSelected, setFileSelected] = useState(false);
   const [linkHovered, setLinkHovered] = useState(false);
 
@@ -65,7 +65,7 @@ export default function Index() {
   };
 
   return (
-    <main className="px-2 py-4 relative min-h-screen bg-white sm:flex sm:justify-center">
+    <main className="relative min-h-screen bg-white px-2 py-4 sm:flex sm:justify-center">
       <div>
         <header className="my-2 rounded-lg  bg-black py-3 text-white">
           <div className="group flex justify-center">
@@ -93,7 +93,7 @@ export default function Index() {
                   className="file:text-md py-2 text-sm file:mr-2 file:rounded-md file:border-0 file:bg-purple-500 file:py-2 file:px-6 file:font-medium file:text-white hover:file:cursor-pointer hover:file:bg-purple-700 "
                 />
                 <button
-                  className=" absolute bottom-1 right-1 flex h-7 w-20 items-center justify-center rounded-md bg-purple-500 py-2 px-4 text-white enabled:hover:bg-purple-700  disabled:opacity-60 disabled:text-gray-300"
+                  className=" absolute bottom-1 right-1 flex h-7 w-20 items-center justify-center rounded-md bg-purple-500 py-2 px-4 text-white enabled:hover:bg-purple-700  disabled:text-gray-300 disabled:opacity-60"
                   type="submit"
                   disabled={isLoading || !fileSelected}
                 >
