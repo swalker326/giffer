@@ -20,6 +20,12 @@ function replaceSpaces(string: string) {
   return string.replace(/\s/g, "_");
 }
 
+function rm(filePath: string) {
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+}
+
 const execAsync = promisify(exec);
 
 export async function movToGif(file: Blob) {
@@ -63,6 +69,8 @@ export async function movToGif(file: Blob) {
       path.join(__dirname, outputPath, `${fileName}.gif`),
       { encoding: "base64" }
     );
+    rm(path.join(__dirname, inputPath, fileName));
+    rm(path.join(__dirname, outputPath, `${fileName}.gif`));
     clearInterval(interval);
     return gif;
   } catch (error) {
