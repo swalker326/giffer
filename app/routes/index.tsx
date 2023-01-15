@@ -64,60 +64,62 @@ export default function Index() {
   };
 
   return (
-    <main className="relative min-h-screen bg-white px-2 py-4 sm:flex sm:justify-center">
-      <div>
-        <header className="my-2 rounded-lg  bg-black py-3 text-white">
-          <div className="group flex justify-center">
-            <h1 className="flex items-center text-2xl font-medium">
-              Upload a
-              <div className="rounded-full bg-purple-500 p-3 transition-transform duration-300 group-hover:translate-x-5 group-hover:-translate-y-2 group-hover:scale-105">
-                *.mov
-              </div>
-            </h1>
-          </div>
-        </header>
-        <fetcher.Form method="post" encType="multipart/form-data">
-          <div className="flex-col items-center justify-center md:flex md:justify-between">
-            <label>
-              <div
-                onDrop={handleDrop}
-                className="relative flex min-h-[110px] w-full flex-col items-center rounded-sm border border-dashed border-purple-500 p-3"
-              >
-                <h3>Drop a file or</h3>
-                <input
-                  ref={inputRef}
-                  name="file"
-                  type="file"
-                  onChange={handleFileChange}
-                  className="file:text-md py-2 text-sm file:mr-2 file:rounded-md file:border-0 file:bg-purple-500 file:py-2 file:px-6 file:font-medium file:text-white hover:file:cursor-pointer hover:file:bg-purple-700 "
-                />
-                <button
-                  className=" absolute bottom-1 right-1 flex h-7 w-20 items-center justify-center rounded-md bg-purple-500 py-2 px-4 text-white enabled:hover:bg-purple-700  disabled:text-gray-300 disabled:opacity-60"
-                  type="submit"
-                  disabled={isLoading || !fileSelected}
+    <main className="relative flex min-h-screen justify-center bg-white px-2 py-4">
+      <div className="container mx-auto">
+        <div>
+          <header className="my-2 rounded-lg  bg-black py-3 text-white">
+            <div className="group flex justify-center">
+              <h1 className="flex items-center text-2xl font-medium">
+                Upload a
+                <div className="rounded-full bg-purple-500 p-3 transition-transform duration-300 group-hover:translate-x-5 group-hover:-translate-y-2 group-hover:scale-105">
+                  *.mov
+                </div>
+              </h1>
+            </div>
+          </header>
+          <fetcher.Form method="post" encType="multipart/form-data">
+            <div className="flex-col items-center justify-center">
+              <label>
+                <div
+                  onDrop={handleDrop}
+                  className="relative flex min-h-[110px] w-full flex-col items-center rounded-sm border border-dashed border-purple-500 p-3"
                 >
-                  {isLoading ? (
-                    <div className="h-fit w-fit">
-                      <LoaderIcon />
-                    </div>
-                  ) : (
-                    "Convert"
-                  )}
+                  <h3>Drop a file or</h3>
+                  <input
+                    ref={inputRef}
+                    name="file"
+                    type="file"
+                    onChange={handleFileChange}
+                    className="file:text-md py-2 text-sm file:mr-2 file:rounded-md file:border-0 file:bg-purple-500 file:py-2 file:px-6 file:font-medium file:text-white hover:file:cursor-pointer hover:file:bg-purple-700 "
+                  />
+                  <button
+                    className=" absolute bottom-1 right-1 flex h-7 w-20 items-center justify-center rounded-md bg-purple-500 py-2 px-4 text-white enabled:hover:bg-purple-700  disabled:text-gray-300 disabled:opacity-60"
+                    type="submit"
+                    disabled={isLoading || !fileSelected}
+                  >
+                    {isLoading ? (
+                      <div className="h-fit w-fit">
+                        <LoaderIcon />
+                      </div>
+                    ) : (
+                      "Convert"
+                    )}
+                  </button>
+                </div>
+              </label>
+            </div>
+          </fetcher.Form>
+          {file && (
+            <div className="group mt-4 flex w-full items-start justify-center">
+              <a className="relative" download href={file}>
+                <button className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-md bg-purple-600 py-2 px-4 font-medium text-white transition-opacity duration-700 ease-in-out md:opacity-0 md:group-hover:opacity-70">
+                  Download
                 </button>
-              </div>
-            </label>
-          </div>
-        </fetcher.Form>
-        {file && (
-          <div className="group mt-4 flex w-full items-start justify-center">
-            <a className="relative" download href={file}>
-              <button className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-md bg-purple-600 py-2 px-4 font-medium text-white transition-opacity duration-700 ease-in-out md:opacity-0 md:group-hover:opacity-70">
-                Download
-              </button>
-              <img style={{ width: "400px" }} src={file} alt="gif" />
-            </a>
-          </div>
-        )}
+                <img style={{ width: "400px" }} src={file} alt="gif" />
+              </a>
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );
