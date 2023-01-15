@@ -121,6 +121,37 @@ export default function Index() {
           )}
         </div>
       </div>
+      <footer className="absolute bottom-0 w-full pb-2 text-center text-xs text-gray-500">
+        <p>
+          Made with{" "}
+          <a
+            className="text-purple-500"
+            href="https://remix.run/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Remix Run
+          </a>{" "}
+          and{" "}
+          <a
+            className="text-purple-500"
+            href="https://ffmpeg.org/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            ffmpeg
+          </a>{" "}
+          by{" "}
+          <a
+            className="text-purple-500"
+            href="https://twitter.com/swalker326"
+            target="_blank"
+            rel="noreferrer"
+          >
+            @swalker326
+          </a>
+        </p>
+      </footer>
     </main>
   );
 }
