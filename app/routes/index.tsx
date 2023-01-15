@@ -1,7 +1,7 @@
 import type { ActionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { convertMovToGif } from "~/models/file.server";
 
 export async function action({ request }: ActionArgs) {
@@ -14,8 +14,11 @@ export async function action({ request }: ActionArgs) {
 
 export default function Index() {
   const fetcher = useFetcher();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [file, setFile] = useState<string>();
+  const [file, setFile] = useState<string>(
+    "https://images.unsplash.com/photo-1671312870850-06d22098ace8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1035&q=80"
+  );
   const [fileSelected, setFileSelected] = useState(false);
   const [linkHovered, setLinkHovered] = useState(false);
 
@@ -48,51 +51,74 @@ export default function Index() {
       setFileSelected(true);
     }
   };
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      if (inputRef.current) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        inputRef.current.files = dt.files;
+        setFileSelected(true);
+      }
+    }
+  };
 
   return (
-    <main className="relative min-h-screen bg-white sm:flex sm:items-center sm:justify-center">
+    <main className="px-2 py-4 relative min-h-screen bg-white sm:flex sm:justify-center">
       <div>
         <header className="my-2 rounded-lg  bg-black py-3 text-white">
-          <div className="flex justify-center">
-            <h1 className="text-2xl font-medium">
-              Upload a{" "}
-              <span className="rounded-full bg-purple-500 p-3">*.mov</span> file
+          <div className="group flex justify-center">
+            <h1 className="flex items-center text-2xl font-medium">
+              Upload a
+              <div className="rounded-full bg-purple-500 p-3 transition-transform duration-300 group-hover:translate-x-5 group-hover:-translate-y-2 group-hover:scale-105">
+                *.mov
+              </div>
             </h1>
           </div>
         </header>
         <fetcher.Form method="post" encType="multipart/form-data">
-          <div className="flex items-center justify-between">
+          <div className="flex-col items-center justify-center md:flex md:justify-between">
             <label>
-              <input
-                name="file"
-                type="file"
-                onChange={handleFileChange}
-                className="file:text-md py-2 text-sm file:mr-2 file:h-12 file:w-32 file:rounded-md file:border-0 file:bg-purple-500 file:py-2 file:px-6 file:font-medium file:text-white hover:file:cursor-pointer hover:file:bg-purple-700"
-              />
+              <div
+                onDrop={handleDrop}
+                className="relative flex min-h-[110px] w-full flex-col items-center rounded-sm border border-dashed border-purple-500 p-3"
+              >
+                <h3>Drop a file or</h3>
+                <input
+                  ref={inputRef}
+                  name="file"
+                  type="file"
+                  onChange={handleFileChange}
+                  className="file:text-md py-2 text-sm file:mr-2 file:rounded-md file:border-0 file:bg-purple-500 file:py-2 file:px-6 file:font-medium file:text-white hover:file:cursor-pointer hover:file:bg-purple-700 "
+                />
+                <button
+                  className=" absolute bottom-1 right-1 flex h-7 w-20 items-center justify-center rounded-md bg-purple-500 py-2 px-4 text-white enabled:hover:bg-purple-700  disabled:opacity-60 disabled:text-gray-300"
+                  type="submit"
+                  disabled={isLoading || !fileSelected}
+                >
+                  {isLoading ? (
+                    <div className="h-fit w-fit">
+                      <LoaderIcon />
+                    </div>
+                  ) : (
+                    "Convert"
+                  )}
+                </button>
+              </div>
             </label>
-
-            <button
-              className="flex h-12 w-32 items-center justify-center rounded-md bg-purple-500 py-2 px-4 font-medium text-white enabled:hover:bg-purple-700 disabled:opacity-60"
-              type="submit"
-              disabled={isLoading || !fileSelected}
-            >
-              {isLoading ? <LoaderIcon /> : "Convert"}
-            </button>
           </div>
         </fetcher.Form>
         {file && (
           <div
-            className="flex w-full items-start justify-center space-y-3"
+            className="group mt-4 flex w-full items-start justify-center"
             onMouseEnter={() => setLinkHovered(true)}
             onMouseLeave={() => setLinkHovered(false)}
           >
             <a className="relative" download href={file}>
-              {linkHovered && (
-                <button className="-m-top-6 absolute top-1/2 left-1/2 -ml-16 -mt-8 h-12 w-32 rounded-md bg-purple-600 py-2 px-4 font-medium text-white">
-                  {" "}
-                  Download
-                </button>
-              )}
+              <button className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-md bg-purple-600 py-2 px-4 font-medium text-white transition-opacity duration-700 ease-in-out md:opacity-0 md:group-hover:opacity-70">
+                Download
+              </button>
               <img style={{ width: "400px" }} src={file} alt="gif" />
             </a>
           </div>
@@ -107,7 +133,7 @@ const LoaderIcon = () => {
     <div role="status">
       <svg
         aria-hidden="true"
-        className="mr-2 h-8 w-8 animate-spin fill-white text-gray-200 dark:text-gray-600"
+        className="h-6 w-6 animate-spin fill-white text-gray-200 dark:text-gray-600"
         viewBox="0 0 100 101"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
