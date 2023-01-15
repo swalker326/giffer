@@ -59,6 +59,6 @@ COPY --from=build /myapp/public /myapp/public
 COPY --from=build /myapp/package.json /myapp/package.json
 COPY --from=build /myapp/start.sh /myapp/start.sh
 COPY --from=build /myapp/prisma /myapp/prisma
-RUN mkdir -p /myapp/build/input /myapp/build/output
+RUN mkdir -p /myapp/build/tmp/input /myapp/build/tmp/output
 
 ENTRYPOINT [ "./start.sh" ]
