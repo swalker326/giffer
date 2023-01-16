@@ -28,7 +28,18 @@ function rm(filePath: string) {
 
 const execAsync = promisify(exec);
 
-export async function movToGif(file: Blob) {
+type FFMPEGOptions = {
+  fps: number;
+  width: number;
+  height: number;
+  startTime: number;
+  duration: number;
+  loop: number;
+  quality: number;
+  pixelFormat: string;
+}
+
+export async function movToGif(file: Blob, options: FFMPEGOptions) {
   const imageBuffer = await file.arrayBuffer();
   const fileName = replaceSpaces(file.name.split(".")[0] + `_${makeid(6)}`);
   const outputPath = "tmp/output/";
