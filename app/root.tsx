@@ -9,6 +9,7 @@ import {
 } from "@remix-run/react";
 
 import tailwindStylesheetUrl from "./styles/tailwind.css";
+import { withSentry } from "@sentry/remix";
 
 export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: tailwindStylesheetUrl }];
@@ -26,7 +27,7 @@ export const meta: MetaFunction = () => ({
 //   });
 // }
 
-export default function App() {
+function App() {
   return (
     <html lang="en" className="h-full">
       <head>
@@ -42,3 +43,4 @@ export default function App() {
     </html>
   );
 }
+export default withSentry(App);
