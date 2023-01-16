@@ -1,10 +1,26 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import loop from "../../public/assets/loop.gif";
 import { ConvertForm } from "./convert";
 import type { ErrorBoundaryComponent } from "@sentry/remix/types/utils/types";
 
 export default function Index() {
   const [file, setFile] = useState<string>(loop);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (sliderRef.current) {
+        const top = (sliderRef.current.scrollTop += 48);
+        if (top >= sliderRef.current.scrollHeight) {
+          sliderRef.current.scrollTo({ top: 0 });
+        } else {
+          sliderRef.current.scrollTo({ top, behavior: "smooth" });
+        }
+      }
+    }, 2000);
+    return () => {
+      clearInterval(interval);
+    };
+  });
 
   return (
     <main className="relative flex min-h-screen justify-center bg-white px-2 py-4">
@@ -17,6 +33,7 @@ export default function Index() {
                   Upload a
                 </h1>
                 <div
+                  ref={sliderRef}
                   className="flex h-10 flex-col justify-start space-y-2 overflow-hidden text-2xl"
                 >
                   <LoopItem>.mov</LoopItem>
