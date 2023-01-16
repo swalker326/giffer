@@ -18,7 +18,6 @@ export default function Index() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<string>(loop);
-  // "https://images.unsplash.com/photo-1671312870850-06d22098ace8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1035&q=80"
   const [fileSelected, setFileSelected] = useState(false);
 
   function base64ToImgUrl(base64: string): string {
@@ -85,7 +84,7 @@ export default function Index() {
                     onDrop={handleDrop}
                     className="relative flex min-h-[110px] w-full flex-col items-center rounded-sm border border-dashed border-purple-500 p-3"
                   >
-                    <h3 className="text-2xl mb-2">Drop a file or</h3>
+                    <h3 className="mb-2 text-2xl">Drop a file or</h3>
                     <input
                       ref={inputRef}
                       name="file"
