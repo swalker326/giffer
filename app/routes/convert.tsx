@@ -8,7 +8,6 @@ import { convertMovToGif } from "~/models/file.server";
 
 export async function action({ request }: ActionArgs) {
   try {
-    // throw new Error("This is a test error");
     const body = await request.formData();
     const file = body.get("file") as File;
     const gif = await convertMovToGif(file);
@@ -31,6 +30,7 @@ interface ConvertFormProps {
 export const ConvertForm = ({ setFile }: ConvertFormProps) => {
   const fetcher = useFetcher();
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [fileSelected, setFileSelected] = useState(false);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,8 +61,11 @@ export const ConvertForm = ({ setFile }: ConvertFormProps) => {
   useEffect(() => {
     setIsLoading(fetcher.state === "loading" || fetcher.state === "submitting");
   }, [fetcher.state]);
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    dropRef.current?.classList.remove("animate-wiggle");
+    dropRef.current?.classList.remove("bg-purple-100");
     const file = e.dataTransfer.files[0];
     if (file) {
       if (inputRef.current) {
@@ -88,7 +91,18 @@ export const ConvertForm = ({ setFile }: ConvertFormProps) => {
         ) : null}
         <label>
           <div
+            ref={dropRef}
             onDrop={handleDrop}
+            onDragOver={(e) => {
+              e.preventDefault();
+              dropRef.current?.classList.add("bg-purple-200");
+              dropRef.current?.classList.add("animate-wiggle");
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              dropRef.current?.classList.remove("animate-wiggle");
+              dropRef.current?.classList.remove("bg-purple-100");
+            }}
             className="relative flex min-h-[110px] w-full flex-col items-center rounded-sm border border-dashed border-purple-500 p-3"
           >
             <h3 className="mb-2 text-2xl">Drop a file or</h3>

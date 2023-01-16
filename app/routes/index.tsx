@@ -1,10 +1,26 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import loop from "../../public/assets/loop.gif";
 import { ConvertForm } from "./convert";
 import type { ErrorBoundaryComponent } from "@sentry/remix/types/utils/types";
 
 export default function Index() {
   const [file, setFile] = useState<string>(loop);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (sliderRef.current) {
+        const top = (sliderRef.current.scrollTop += 48);
+        if (top >= sliderRef.current.scrollHeight) {
+          sliderRef.current.scrollTo({ top: 0 });
+        } else {
+          sliderRef.current.scrollTo({ top, behavior: "smooth" });
+        }
+      }
+    }, 2000);
+    return () => {
+      clearInterval(interval);
+    };
+  });
 
   return (
     <main className="relative flex min-h-screen justify-center bg-white px-2 py-4">
@@ -12,13 +28,21 @@ export default function Index() {
         <div>
           <div>
             <header className="my-2 rounded-lg  bg-black py-3 text-white">
-              <div className="group flex justify-center">
+              <div className="group flex items-center justify-center space-x-1">
                 <h1 className="flex items-center text-2xl font-medium">
                   Upload a
-                  <div className="rounded-full bg-purple-500 p-3 transition-transform duration-300 group-hover:translate-x-5 group-hover:-translate-y-2 group-hover:scale-105">
-                    *.mov
-                  </div>
                 </h1>
+                <div
+                  ref={sliderRef}
+                  className="flex h-10 flex-col justify-start space-y-2 overflow-hidden text-2xl"
+                >
+                  <LoopItem>.mov</LoopItem>
+                  <LoopItem>.mp4</LoopItem>
+                  <LoopItem>.m4v</LoopItem>
+                  <LoopItem>.avi</LoopItem>
+                  <LoopItem>.wmv</LoopItem>
+                  <LoopItem>.flv</LoopItem>
+                </div>
               </div>
             </header>
             <ConvertForm setFile={setFile} />
@@ -76,5 +100,13 @@ export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
       <h1 className="text-2xl font-bold">Something went wrong</h1>
       <p className="text-lg">{error.message}</p>
     </div>
+  );
+};
+
+const LoopItem = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-purple-500 px-2 py-1 text-2xl text-white">
+      {children}
+    </span>
   );
 };
