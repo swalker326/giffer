@@ -8,7 +8,7 @@ import { convertMovToGif } from "~/models/file.server";
 
 export async function action({ request }: ActionArgs) {
   try {
-    throw new Error("This is a test error");
+    // throw new Error("This is a test error");
     const body = await request.formData();
     const file = body.get("file") as File;
     const gif = await convertMovToGif(file);
