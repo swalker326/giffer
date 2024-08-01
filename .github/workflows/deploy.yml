@@ -32,6 +32,9 @@ jobs:
           useLockFile: false
 
       - name: 🔬 Lint
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
         run: pnpm lint
 
   typecheck:
