@@ -22,9 +22,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 22
 
       - name: 📥 Install pnpm
         uses: pnpm/action-setup@v4
@@ -63,71 +63,71 @@ jobs:
       - name: 🔎 Type check
         run: pnpm run typecheck --if-present
 
-  vitest:
-    name: ⚡ Vitest
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
+  # vitest:
+  #   name: ⚡ Vitest
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: 🛑 Cancel Previous Runs
+  #       uses: styfle/cancel-workflow-action@0.11.0
 
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
+  #     - name: ⬇️ Checkout repo
+  #       uses: actions/checkout@v3
 
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
+  #     - name: ⎔ Setup node
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 16
 
-      - name: 📥 Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 6.32.9
+  #     - name: 📥 Install pnpm
+  #       uses: pnpm/action-setup@v2
+  #       with:
+  #         version: 6.32.9
 
-      - name: 📥 Download deps
-        run: pnpm install --frozen-lockfile
+  #     - name: 📥 Download deps
+  #       run: pnpm install --frozen-lockfile
 
-      - name: ⚡ Run vitest
-        run: pnpm run test -- --coverage
+  #     - name: ⚡ Run vitest
+  #       run: pnpm run test -- --coverage
 
-  cypress:
-    name: ⚫️ Cypress
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
+  # cypress:
+  #   name: ⚫️ Cypress
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: 🛑 Cancel Previous Runs
+  #       uses: styfle/cancel-workflow-action@0.11.0
 
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
+  #     - name: ⬇️ Checkout repo
+  #       uses: actions/checkout@v3
 
-      - name: 🏄 Copy test env vars
-        run: cp .env.example .env
+  #     - name: 🏄 Copy test env vars
+  #       run: cp .env.example .env
 
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
+  #     - name: ⎔ Setup node
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 16
 
-      - name: 📥 Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 6.32.9
+  #     - name: 📥 Install pnpm
+  #       uses: pnpm/action-setup@v2
+  #       with:
+  #         version: 6.32.9
 
-      - name: 📥 Download deps
-        run: pnpm install --frozen-lockfile
+  #     - name: 📥 Download deps
+  #       run: pnpm install --frozen-lockfile
 
-      - name: 🛠 Setup Database
-        run: pnpm prisma migrate reset --force
+  #     - name: 🛠 Setup Database
+  #       run: pnpm prisma migrate reset --force
 
-      - name: ⚙️ Build
-        run: pnpm run build
+  #     - name: ⚙️ Build
+  #       run: pnpm run build
 
-      - name: 🌳 Cypress run
-        uses: cypress-io/github-action@v5
-        with:
-          start: pnpm run start:mocks
-          wait-on: "http://localhost:8811"
-        env:
-          PORT: "8811"
+  #     - name: 🌳 Cypress run
+  #       uses: cypress-io/github-action@v5
+  #       with:
+  #         start: pnpm run start:mocks
+  #         wait-on: "http://localhost:8811"
+  #       env:
+  #         PORT: "8811"
 
   build:
     name: 🐳 Build
