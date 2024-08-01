@@ -1,7 +1,7 @@
+import type { ErrorBoundaryComponent } from "node_modules/@sentry/remix/build/types/utils/vendor/types";
 import { useEffect, useRef, useState } from "react";
-import loop from "../../public/assets/loop.gif";
+import loop from "/assets/loop.gif";
 import { ConvertForm } from "./convert";
-import { ErrorBoundaryComponent } from "node_modules/@sentry/remix/build/types/utils/vendor/types";
 
 export default function Index() {
 	const [file, setFile] = useState<string>(loop);

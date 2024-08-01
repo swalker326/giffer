@@ -1,11 +1,11 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
-import * as Sentry from "@sentry/remix";
 import { json } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
+import * as Sentry from "@sentry/remix";
+import type { ErrorBoundaryComponent } from "node_modules/@sentry/remix/build/types/utils/vendor/types";
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useRef, useState } from "react";
 import { convertMovToGif } from "~/models/file.server";
-import { ErrorBoundaryComponent } from "node_modules/@sentry/remix/build/types/utils/vendor/types";
 
 export async function action({ request }: ActionFunctionArgs) {
 	try {
@@ -45,17 +45,17 @@ export const ConvertForm = ({ setFile }: ConvertFormProps) => {
 			setFileSelected(true);
 		}
 	};
-	function base64ToImgUrl(base64: string): string {
-		const binaryString = atob(base64);
-		const array = new Uint8Array(binaryString.length);
-		for (let i = 0; i < binaryString.length; i++) {
-			array[i] = binaryString.charCodeAt(i);
-		}
-		const blob = new Blob([array], { type: "image/gif" });
-		return URL.createObjectURL(blob);
-	}
 
 	useEffect(() => {
+		function base64ToImgUrl(base64: string): string {
+			const binaryString = atob(base64);
+			const array = new Uint8Array(binaryString.length);
+			for (let i = 0; i < binaryString.length; i++) {
+				array[i] = binaryString.charCodeAt(i);
+			}
+			const blob = new Blob([array], { type: "image/gif" });
+			return URL.createObjectURL(blob);
+		}
 		if (fetcher.data?.gif) {
 			const getFileurl = async () => {
 				if (!fetcher.data?.gif) throw new Error("No gif found");
