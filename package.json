@@ -5,6 +5,8 @@
 	"type": "module",
 	"scripts": {
 		"build": "remix vite:build",
+		"format": "biome format app --write",
+		"format:check": "biome format app",
 		"lint": "biome check app",
 		"lint:check": "biome check --check app",
 		"dev": "remix vite:dev",
