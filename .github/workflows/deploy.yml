@@ -36,7 +36,7 @@ jobs:
 
       - name: Setup Biome
         uses: biomejs/setup-biome@v2.2.1
-            
+
       - name: 🔬 Lint
         run: pnpm lint
 
@@ -58,7 +58,7 @@ jobs:
       - name: 📥 Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 6.32.9
+          version: 9.6.0
 
       - name: 📥 Download deps
         run: pnpm install --frozen-lockfile
