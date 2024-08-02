@@ -1,64 +1,55 @@
-# base node image
-FROM node:16-bullseye-slim as base
+# syntax = docker/dockerfile:1
 
-# set for base and all layer that inherit from it
-ENV NODE_ENV production
+# Adjust NODE_VERSION as desired
+ARG NODE_VERSION=22.2.0
+FROM node:${NODE_VERSION}-bullseye-slim as base
 
-# Install openssl for Prisma
-RUN apt-get update && apt-get install -y openssl sqlite3
-RUN apt-get install -y ffmpeg
+LABEL fly_launch_runtime="Remix"
 
-# Install all node_modules, including dev dependencies
-FROM base as deps
+# Remix app lives here
+WORKDIR /app
 
-WORKDIR /myapp
-
-ADD package.json package-lock.json .npmrc ./
-RUN npm install --production=false
-
-# Setup production node_modules
-FROM base as production-deps
-
-WORKDIR /myapp
-
-COPY --from=deps /myapp/node_modules /myapp/node_modules
-ADD package.json package-lock.json .npmrc ./
-RUN npm prune --production
-
-# Build the app
-FROM base as build
-
-WORKDIR /myapp
-
-COPY --from=deps /myapp/node_modules /myapp/node_modules
-
-ADD prisma .
-RUN npx prisma generate
-
-
-ADD . .
-RUN npm run build
-
-# Finally, build the production image with minimal footprint
-FROM base
-
-ENV DATABASE_URL=file:/data/sqlite.db
-ENV PORT="8080"
+# Set production environment
 ENV NODE_ENV="production"
 
-# add shortcut for connecting to database CLI
-RUN echo "#!/bin/sh\nset -x\nsqlite3 \$DATABASE_URL" > /usr/local/bin/database-cli && chmod +x /usr/local/bin/database-cli
+# Install pnpm
+ARG PNPM_VERSION=9.2.0
+RUN npm install -g pnpm@$PNPM_VERSION
 
-WORKDIR /myapp
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y ffmpeg
 
-COPY --from=production-deps /myapp/node_modules /myapp/node_modules
-COPY --from=build /myapp/node_modules/.prisma /myapp/node_modules/.prisma
 
-COPY --from=build /myapp/build /myapp/build
-COPY --from=build /myapp/public /myapp/public
-COPY --from=build /myapp/package.json /myapp/package.json
-COPY --from=build /myapp/start.sh /myapp/start.sh
-COPY --from=build /myapp/prisma /myapp/prisma
-RUN mkdir -p /myapp/build/tmp/input /myapp/build/tmp/output
 
-ENTRYPOINT [ "./start.sh" ]
+# Throw-away build stage to reduce size of final image
+FROM base as build
+
+# Install packages needed to build node modules
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
+
+# Install node modules
+COPY --link .npmrc package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod=false
+
+# Copy application code
+COPY --link . .
+
+# Build application
+RUN pnpm run build
+
+# Remove development dependencies
+RUN pnpm prune --prod
+
+
+# Final stage for app image
+FROM base
+
+# Copy built application
+COPY --from=build /app /app
+
+RUN mkdir -p /app/build/server/tmp/input /app/build/server/tmp/output
+
+# Start the server by default, this can be overwritten at runtime
+EXPOSE 3000
+CMD [ "pnpm", "run", "start" ]
