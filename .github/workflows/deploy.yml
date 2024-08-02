@@ -10,14 +10,15 @@ permissions:
   actions: write
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: ⬣ Biome Check
     runs-on: ubuntu-latest
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
@@ -37,7 +38,7 @@ jobs:
       - name: Setup Biome
         uses: biomejs/setup-biome@v2.2.1
         with: 
-          biome-version: 1.8.3
+          version: 1.8.3
 
       - name: 🔬 Lint
         run: pnpm check
@@ -46,8 +47,6 @@ jobs:
     name: ʦ TypeScript
     runs-on: ubuntu-latest
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
 
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
