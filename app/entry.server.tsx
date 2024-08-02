@@ -30,13 +30,13 @@ export default function handleRequest(
 				responseStatusCode,
 				responseHeaders,
 				remixContext,
-		  )
+			)
 		: handleBrowserRequest(
 				request,
 				responseStatusCode,
 				responseHeaders,
 				remixContext,
-		  );
+			);
 }
 console.log("Done");
 function handleBotRequest(
