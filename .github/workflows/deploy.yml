@@ -36,6 +36,8 @@ jobs:
 
       - name: Setup Biome
         uses: biomejs/setup-biome@v2.2.1
+        with: 
+          biome-version: 1.8.3
 
       - name: 🔬 Lint
         run: pnpm lint

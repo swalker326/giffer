@@ -7,8 +7,8 @@
 		"build": "remix vite:build",
 		"format": "biome format app --write",
 		"format:check": "biome format app",
-		"lint": "biome check app",
-		"lint:check": "biome check --check app",
+		"autofix": "biome check --fix app",
+		"check": "biome check app",
 		"dev": "remix vite:dev",
 		"start": "remix-serve ./build/server/index.js",
 		"typecheck": "tsc"
@@ -29,6 +29,7 @@
 		"react-dom": "^18.2.0"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "1.8.3",
 		"@flydotio/dockerfile": "^0.5.8",
 		"@remix-run/dev": "^2.11.0",
 		"@types/bcryptjs": "^2.4.2",
