@@ -40,7 +40,7 @@ jobs:
           biome-version: 1.8.3
 
       - name: 🔬 Lint
-        run: pnpm lint
+        run: pnpm check
 
   typecheck:
     name: ʦ TypeScript
