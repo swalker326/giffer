@@ -38,7 +38,6 @@ export default function handleRequest(
 				remixContext,
 			);
 }
-console.log("Done");
 function handleBotRequest(
 	request: Request,
 	responseStatusCode: number,
