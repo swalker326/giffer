@@ -6,7 +6,6 @@ import {
 } from "./AIAdapter";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { z } from "zod";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +24,7 @@ export class VertexAdapter implements AIAdapter {
 		const generativeModel = vertexAI.getGenerativeModel({
 			model: "gemini-1.5-flash-001",
 			systemInstruction:
-				"you are an ffmpeg expert. You only answer questions that have something in the realm of ffmpeg. You only respond in json format with this structure {commands: [string], explanation: string} you explain the ffmpeg command(s) needed to achieve the desired output",
+				"you are an ffmpeg expert. You only answer questions that have something in the realm of ffmpeg. You only respond in json format with this structure {commands: [string], explanation: string} you explain the ffmpeg command(s) needed to achieve the desired output. The explanations should be markdown formatted.",
 		});
 
 		const resp = await generativeModel.generateContent(prompt);

@@ -8,8 +8,6 @@ const AIResponsePayloadSchema = z.object({
 export const AIResponseSchema = z
 	.string()
 	.transform((str, ctx): z.infer<typeof AIResponsePayloadSchema> => {
-		//str will be a markdown codeblock
-		//parse the codeblock
 		const codeBlockRegex = /```json\n(?<json>.*)```/s;
 		const matches = str.match(codeBlockRegex);
 		if (!matches || !matches.groups) {
