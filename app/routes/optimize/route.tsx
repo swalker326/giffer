@@ -1,9 +1,12 @@
 import { type ActionFunctionArgs, json } from "@remix-run/node";
 import { Form, useActionData } from "@remix-run/react";
-import React from "react";
 import { AIService } from "~/ai/AIService";
 import { VertexAdapter } from "~/ai/VertexAdapter.server";
 import { FFMPEGCommand } from "./components/FFMPEGCommand";
+import Markdown from "react-markdown";
+import { Button } from "~/components/ui/button";
+import { Forward as ForwardIcon, PaperclipIcon } from "lucide-react";
+import { Textarea } from "~/components/ui/textarea";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const formData = await request.formData();
@@ -23,36 +26,51 @@ export default function OptimizeRoute() {
 	const actionResponse = useActionData<typeof action>();
 	const payload = actionResponse?.response;
 	return (
-		<section>
-			<Form method="POST">
-				<textarea
-					className="w-full border"
-					name="prompt"
-					placeholder="Enter a question"
-				/>
-				<button
-					type="submit"
-					className="border bg-purple-500 p-2 py-3 text-white rounded-md"
-				>
-					{" "}
-					Ask{" "}
-				</button>
-			</Form>
-			{payload && (
-				<div>
-					<h2>Response</h2>
+		<div className="flex flex-col h-full w-full container gap-2 py-3">
+			<h1 className="text-3xl font-semibold">Optimize Media</h1>
+			<div className="flex-1 w-full border rounded-md p-3">
+				{payload && (
 					<div>
-						<h3>Commands</h3>
-						{payload.response.commands.map((command) => (
-							<FFMPEGCommand command={command} />
-						))}
+						<div>
+							<h3 className="text-xl font-semibold">Commands</h3>
+							{payload.response.commands.map((command) => (
+								<FFMPEGCommand key={command.length} command={command} />
+							))}
+						</div>
+						<div>
+							<h3 className="text-xl font-semibold">Explanation</h3>
+							<div className="prose">
+								<Markdown>{payload.response.explanation}</Markdown>
+							</div>
+						</div>
 					</div>
-					<div>
-						<h3>Explanation</h3>
-						<pre>{payload.response.explanation}</pre>
+				)}
+			</div>
+			<Form method="POST" className="w-full">
+				<div className="flex gap-1 items-center">
+					<Textarea
+						className="w-full bg-gray-100 text-lg"
+						name="prompt"
+						placeholder="What do you want to do?"
+						onKeyDown={(e) => {
+							if (e.key === "Enter" && e.metaKey) {
+								e.preventDefault();
+								e.currentTarget.form?.dispatchEvent(
+									new Event("submit", { bubbles: true, cancelable: true }),
+								);
+							}
+						}}
+					/>
+					<div className="flex flex-col gap-1 justify-between">
+						<Button variant="outline" type="button">
+							<PaperclipIcon />
+						</Button>
+						<Button type="submit">
+							<ForwardIcon />
+						</Button>
 					</div>
 				</div>
-			)}
-		</section>
+			</Form>
+		</div>
 	);
 }
