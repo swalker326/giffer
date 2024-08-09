@@ -1,0 +1,21 @@
+{
+  "extends": ["//"],
+  "pipeline": {
+    "db:deploy": {
+      "cache": false
+    },
+    "db:push": {
+      "cache": false
+    },
+    "db:reset": {
+      "cache": false
+    },
+    "db:seed": {
+      "dependsOn": ["db:push"],
+      "cache": false
+    },
+    "db:studio": {
+      "cache": false
+    }
+  }
+}

@@ -14,3 +14,6 @@ node_modules
 giffer-431700-1e14fe34cfb4.json
 giffer-431700-ee82365796e0.json
 .turbo
+out
+*/**dist
+packages/db/dist/

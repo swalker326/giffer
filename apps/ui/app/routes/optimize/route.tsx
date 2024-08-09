@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs, json } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
+import { Form, useActionData, useFetcher, useSubmit } from "@remix-run/react";
 import { AIService } from "~/ai/AIService";
 import { VertexAdapter } from "~/ai/VertexAdapter.server";
 import { FFMPEGCommand } from "./components/FFMPEGCommand";
@@ -7,6 +7,8 @@ import Markdown from "react-markdown";
 import { Button } from "~/components/ui/button";
 import { Forward as ForwardIcon, PaperclipIcon } from "lucide-react";
 import { Textarea } from "~/components/ui/textarea";
+import { FileUploadButton } from "~/components/FileUploadButton";
+import { action as uploadAction } from "~/routes/upload";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const formData = await request.formData();
@@ -24,6 +26,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function OptimizeRoute() {
 	const actionResponse = useActionData<typeof action>();
+	const fileUploadFetcher = useFetcher<typeof uploadAction>({ key: "upload" });
 	const payload = actionResponse?.response;
 	return (
 		<div className="flex flex-col h-full w-full container gap-2 py-3">
@@ -46,31 +49,33 @@ export default function OptimizeRoute() {
 					</div>
 				)}
 			</div>
-			<Form method="POST" className="w-full">
-				<div className="flex gap-1 items-center">
-					<Textarea
-						className="w-full bg-gray-100 text-lg"
-						name="prompt"
-						placeholder="What do you want to do?"
-						onKeyDown={(e) => {
-							if (e.key === "Enter" && e.metaKey) {
-								e.preventDefault();
-								e.currentTarget.form?.dispatchEvent(
-									new Event("submit", { bubbles: true, cancelable: true }),
-								);
-							}
-						}}
+			{/* <Form method="POST" className="w-full"> */}
+			<div className="flex gap-1 items-center">
+				<Textarea
+					className="w-full bg-gray-100 text-lg"
+					name="prompt"
+					placeholder="What do you want to do?"
+					onKeyDown={(e) => {
+						if (e.key === "Enter" && e.metaKey) {
+							e.preventDefault();
+							e.currentTarget.form?.dispatchEvent(
+								new Event("submit", { bubbles: true, cancelable: true }),
+							);
+						}
+					}}
+				/>
+				<div className="flex flex-col gap-1 justify-between">
+					<FileUploadButton
+						fetcher={fileUploadFetcher}
+						action="/upload"
+						icon={<PaperclipIcon />}
 					/>
-					<div className="flex flex-col gap-1 justify-between">
-						<Button variant="outline" type="button">
-							<PaperclipIcon />
-						</Button>
-						<Button type="submit">
-							<ForwardIcon />
-						</Button>
-					</div>
+					<Button type="submit">
+						<ForwardIcon />
+					</Button>
 				</div>
-			</Form>
+			</div>
+			{/* </Form> */}
 		</div>
 	);
 }

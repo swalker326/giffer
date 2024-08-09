@@ -1,0 +1,43 @@
+# Use multi-stage builds to keep the final image as small as possible
+# Base stage
+ARG NODE_VERSION=22.2.0
+FROM node:22-bookworm-slim as base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+RUN apt-get update && apt-get install -y ca-certificates openssl ffmpeg
+
+# Builder stage
+FROM base AS builder
+COPY . /app
+WORKDIR /app
+RUN pnpm install turbo --global && \
+    turbo prune @giffer/ui --docker
+
+# Installer stage
+FROM base AS installer
+WORKDIR /app
+COPY .gitignore .gitignore
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+RUN pnpm install
+COPY --from=builder /app/out/full/ .
+COPY turbo.json turbo.json
+RUN pnpm turbo build --filter=@giffer/ui...
+COPY --from=builder /app/out/full/apps/ui/giffer-431700*.json /app/apps/ui/build/server/
+
+# Final stage for app image
+FROM base as runner
+WORKDIR /app
+
+# Set environment variables
+ENV NODE_ENV="production"
+
+# Copy project files
+COPY --from=installer /app .
+
+# Expose port and define the default command
+EXPOSE 3000
+CMD [ "pnpm", "run", "start" ]
