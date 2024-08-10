@@ -9,7 +9,7 @@ export default function Index() {
 	useEffect(() => {
 		const interval = setInterval(() => {
 			if (sliderRef.current) {
-				// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+				// biome-ignore lint/suspicious/noAssignInExpressions: idfk
 				const top = (sliderRef.current.scrollTop += 48);
 				if (top >= sliderRef.current.scrollHeight) {
 					sliderRef.current.scrollTo({ top: 0 });

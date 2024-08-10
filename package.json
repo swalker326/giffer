@@ -4,6 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
+		"build": "turbo run build",
 		"deploy:ui:prod": "fly deploy --config ./apps/ui/fly.toml --dockerfile ./Dockerfile.ui",
 		"dev": "turbo dev",
 		"start": "turbo run start",
@@ -13,7 +14,7 @@
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
-		"turbo": "^1.13.3"
+		"turbo": "^2.0.12"
 	},
 	"packageManager": "pnpm@9.7.0"
 }

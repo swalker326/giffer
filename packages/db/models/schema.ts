@@ -8,8 +8,12 @@ import * as connection from "./connection";
 import * as roleToUser from "./role-to-user";
 import * as permissionToRole from "./permission-to-role";
 import * as seeded from "./seed";
+import * as message from "./message";
+import * as conversation from "./conversation";
 
 export const schema = {
+	...conversation,
+	...message,
 	...seeded,
 	...video,
 	...user,

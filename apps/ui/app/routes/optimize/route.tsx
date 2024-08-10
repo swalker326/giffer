@@ -1,5 +1,16 @@
-import { type ActionFunctionArgs, json } from "@remix-run/node";
-import { Form, useActionData, useFetcher, useSubmit } from "@remix-run/react";
+import {
+	type ActionFunctionArgs,
+	json,
+	LoaderFunctionArgs,
+	redirect,
+} from "@remix-run/node";
+import {
+	Form,
+	useActionData,
+	useFetcher,
+	useLoaderData,
+	useSubmit,
+} from "@remix-run/react";
 import { AIService } from "~/ai/AIService";
 import { VertexAdapter } from "~/ai/VertexAdapter.server";
 import { FFMPEGCommand } from "./components/FFMPEGCommand";
@@ -9,6 +20,18 @@ import { Forward as ForwardIcon, PaperclipIcon } from "lucide-react";
 import { Textarea } from "~/components/ui/textarea";
 import { FileUploadButton } from "~/components/FileUploadButton";
 import { action as uploadAction } from "~/routes/upload";
+import { requireUserId } from "~/services/auth.server";
+import { db } from "@giffer/db";
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+	const userId = await requireUserId(request, { redirectTo: "/login" });
+	const conversations = await db.query.conversation.findMany({
+		where: (c, { eq }) => eq(c.userId, userId),
+	});
+	return json({
+		conversations,
+	});
+};
 
 export const action = async ({ request }: ActionFunctionArgs) => {
 	const formData = await request.formData();
@@ -25,6 +48,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function OptimizeRoute() {
+	const data = useLoaderData<typeof loader>();
+	console.log(data);
 	const actionResponse = useActionData<typeof action>();
 	const fileUploadFetcher = useFetcher<typeof uploadAction>({ key: "upload" });
 	const payload = actionResponse?.response;

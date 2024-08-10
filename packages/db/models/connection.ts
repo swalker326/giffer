@@ -6,7 +6,7 @@ import { user } from "./user";
 
 export const connection = sqliteTable("connection", {
 	id: text("id").primaryKey().$defaultFn(nanoid),
-	providerName: text("providerName").notNull(),
+	providerName: text("providerName", { enum: ["google"] }).notNull(),
 	providerId: text("providerId").notNull(),
 	updatedAt: int("updatedAt", { mode: "timestamp" }),
 	createdAt: int("createdAt", { mode: "timestamp" })

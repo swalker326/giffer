@@ -1,45 +1,127 @@
-import { GoogleStrategy } from "remix-auth-google";
 import { Authenticator } from "remix-auth";
 import { authSessionStorage } from "~/services/authSession.server";
-import { user as userTable, type InsertUser } from "@giffer/db/models/user";
-import { db } from "@giffer/db";
+import { db, schema } from "@giffer/db";
+import { redirect } from "@remix-run/node";
+import { googleStrategy } from "./providers/google";
+import { SelectUser } from "@giffer/db/models/user";
+import { SelectConnection } from "@giffer/db/models/connection";
+import { downloadFile } from "~/utils/misc";
 
-// Create an instance of the authenticator, pass a generic with what
-// strategies will return and will store in the session
-export const authenticator = new Authenticator<InsertUser>(authSessionStorage);
+export type ProviderUser = {
+	id: string;
+	email: string;
+	username?: string;
+	name?: string;
+	imageUrl?: string;
+};
 
-const clientId = process.env.GOOGLE_CLIENT_ID;
-const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-if (!clientId) {
-	throw new Error("Missing GOOGLE_CLIENT_ID env var");
-}
-if (!clientSecret) {
-	throw new Error("Missing GOOGLE_CLIENT_SECRET env var");
-}
+export const SESSION_EXPIRATION_TIME = 1000 * 60 * 60 * 24 * 30; // 30 days
+export const getSessionExpirationDate = () =>
+	new Date(Date.now() + SESSION_EXPIRATION_TIME);
 
-const googleStrategy = new GoogleStrategy(
-	{
-		clientID: "GOOGLE_CLIENT_ID",
-		clientSecret: "GOOGLE_CLIENT_SECRET",
-		callbackURL: "/auth/google/callback",
-	},
-	async ({ accessToken, refreshToken, extraParams, profile }) => {
-		// Get the user data from your DB or API using the tokens and profile
-		// return User.findOrCreate({ email: profile.emails[0].value });
-		const user = await db.query.user.findFirst({
-			where: (user, { eq }) => eq(user.email, profile.emails[0].value),
-		});
-		if (user) {
-			return user;
-		}
-		const [newUser] = await db
-			.insert(userTable)
-			.values({
-				email: profile.emails[0].value,
-			})
-			.returning();
-		return newUser;
-	},
+export const authenticator = new Authenticator<ProviderUser>(
+	authSessionStorage,
 );
 
 authenticator.use(googleStrategy);
+
+export const sessionKey = "sessislaonId";
+export async function getUserId(request: Request) {
+	const authSession = await authSessionStorage.getSession(
+		request.headers.get("cookie"),
+	);
+	console.log(authSession);
+	const sessionId = authSession.get(sessionKey);
+	console.log(sessionId);
+	if (!sessionId) return null;
+	const session = await db.query.session.findFirst({
+		with: { user: true },
+		columns: { id: true, expirationDate: true },
+		where: (session, { eq, and, gt }) =>
+			and(eq(session.id, sessionId), gt(session.expirationDate, new Date())),
+	});
+
+	if (!session?.user) {
+		throw redirect("/", {
+			headers: {
+				"set-cookie": await authSessionStorage.destroySession(authSession),
+			},
+		});
+	}
+	return session.user.id;
+}
+export async function requireAnonymous(request: Request) {
+	const userId = await getUserId(request);
+	if (userId) {
+		throw redirect("/");
+	}
+}
+export async function requireUserId(
+	request: Request,
+	{ redirectTo }: { redirectTo?: string | null } = {},
+) {
+	const userId = await getUserId(request);
+	if (!userId) {
+		const requestUrl = new URL(request.url);
+		redirectTo =
+			redirectTo === null
+				? null
+				: redirectTo ?? `${requestUrl.pathname}${requestUrl.search}`;
+		const loginParams = redirectTo ? new URLSearchParams({ redirectTo }) : null;
+		const loginRedirect = ["/login", loginParams?.toString()]
+			.filter(Boolean)
+			.join("?");
+		throw redirect(loginRedirect);
+	}
+	return userId;
+}
+
+export async function signupWithConnection({
+	email,
+	providerId,
+	providerName,
+	imageUrl: rawImageUrl,
+}: {
+	email: SelectUser["email"];
+	providerId: SelectConnection["providerId"];
+	providerName: SelectConnection["providerName"];
+	imageUrl?: string;
+}) {
+	const role = await db.query.role.findFirst({
+		where: (role, { eq }) => eq(role.name, "user"),
+	});
+	if (!role) {
+		throw new Error("User role not found");
+	}
+	const user = await db
+		.insert(schema.user)
+		.values({
+			email: email.toLowerCase(),
+		})
+		.returning({ id: schema.user.id });
+	await db.insert(schema.connection).values({
+		providerId,
+		providerName,
+		userId: user[0].id,
+	});
+
+	const newSession = await db
+		.insert(schema.session)
+		.values({
+			expirationDate: getSessionExpirationDate(),
+			userId: user[0].id,
+		})
+		.returning();
+	const imageBlob = rawImageUrl ? await downloadFile(rawImageUrl) : null;
+	if (imageBlob !== null) {
+		await db.insert(schema.userImage).values({
+			...imageBlob,
+			userId: user[0].id,
+		});
+	}
+	const session = await db.query.session.findFirst({
+		where: (session, { eq }) => eq(session.id, newSession[0].id),
+		columns: { id: true, expirationDate: true },
+	});
+	return session;
+}
