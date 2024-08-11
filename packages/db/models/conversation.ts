@@ -1,6 +1,6 @@
 import {
-	InferInsertModel,
-	InferSelectModel,
+	type InferInsertModel,
+	type InferSelectModel,
 	relations,
 	sql,
 } from "drizzle-orm";
@@ -12,7 +12,9 @@ import { user } from "./user";
 export const conversation = sqliteTable("conversation", {
 	id: text("id").primaryKey().$defaultFn(nanoid),
 	label: text("label").notNull(),
-	userId: text("userId").notNull(),
+	userId: text("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
 	updatedAt: int("updatedAt", { mode: "timestamp" }),
 	createdAt: int("createdAt", { mode: "timestamp" })
 		.notNull()
@@ -25,7 +27,7 @@ export const conversationRelations = relations(conversation, (helpers) => ({
 		fields: [conversation.userId],
 		references: [user.id],
 	}),
-	messages: helpers.many(message, { relationName: "conversationToMessage" }),
+	messages: helpers.many(message),
 }));
 
 export type SelectConversation = InferSelectModel<typeof conversation>;

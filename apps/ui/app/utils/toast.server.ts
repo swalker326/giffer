@@ -1,6 +1,6 @@
-import { z } from "zod";
-import { nanoid } from "nanoid";
 import { createCookieSessionStorage, redirect } from "@remix-run/node";
+import { nanoid } from "nanoid";
+import { z } from "zod";
 import { combineHeaders } from "./misc";
 
 export const toastKey = "toast";
@@ -59,7 +59,7 @@ export async function getToast(request: Request) {
 		headers: toast
 			? new Headers({
 					"set-cookie": await toastSessionStorage.destroySession(session),
-			  })
+				})
 			: null,
 	};
 }

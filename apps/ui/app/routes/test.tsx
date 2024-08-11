@@ -1,5 +1,5 @@
-import { json, useFetcher } from "@remix-run/react";
-import { action as uploadAction } from "~/routes/upload";
+import { useFetcher } from "@remix-run/react";
+import type { action as uploadAction } from "~/routes/upload";
 
 export default function Test() {
 	const uploadFetcher = useFetcher<typeof uploadAction>();

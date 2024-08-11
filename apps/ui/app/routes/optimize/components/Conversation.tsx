@@ -1,6 +1,6 @@
-import { SerializeFrom } from "@remix-run/node";
-import { ChatMessage, Sender } from "./Message";
-import { getConversationsWithMessages } from "~/models/conversation.server";
+import type { SerializeFrom } from "@remix-run/node";
+import type { getConversationsWithMessages } from "~/models/conversation.server";
+import { ChatMessage } from "./Message";
 
 export function Conversation({
 	messages,

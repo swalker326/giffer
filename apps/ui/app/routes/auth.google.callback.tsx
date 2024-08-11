@@ -1,5 +1,8 @@
-import { destroyRedirectToHeader } from "~/utils/redirect-cookie.server";
+import { db } from "@giffer/db";
+import { connection as connectionTable } from "@giffer/db/models/connection";
+import { session as sessionTable } from "@giffer/db/models/session";
 import type { LoaderFunctionArgs } from "@remix-run/node";
+import { safeRedirect } from "remix-utils/safe-redirect";
 import {
 	authenticator,
 	getSessionExpirationDate,
@@ -7,19 +10,15 @@ import {
 	sessionKey,
 	signupWithConnection,
 } from "~/services/auth.server";
-import { createToastHeaders, redirectWithToast } from "~/utils/toast.server";
-import { db } from "@giffer/db";
-import { connection as connectionTable } from "@giffer/db/models/connection";
-import { session as sessionTable } from "@giffer/db/models/session";
-import { combineHeaders } from "~/utils/misc";
-import { handleNewSession } from "./login/utils";
-import { safeRedirect } from "remix-utils/safe-redirect";
 import { authSessionStorage } from "~/services/authSession.server";
+import { combineHeaders } from "~/utils/misc";
+import { destroyRedirectToHeader } from "~/utils/redirect-cookie.server";
+import { createToastHeaders, redirectWithToast } from "~/utils/toast.server";
+import { handleNewSession } from "./login/utils";
 
 const destroyRedirectTo = { "set-cookie": destroyRedirectToHeader };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-	console.log(request);
 	const authResult = await authenticator
 		.authenticate("google", request, {
 			throwOnError: true,

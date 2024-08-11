@@ -1,11 +1,11 @@
+import { db, schema } from "@giffer/db";
+import type { SelectConnection } from "@giffer/db/models/connection";
+import type { SelectUser } from "@giffer/db/models/user";
+import { redirect } from "@remix-run/node";
 import { Authenticator } from "remix-auth";
 import { authSessionStorage } from "~/services/authSession.server";
-import { db, schema } from "@giffer/db";
-import { redirect } from "@remix-run/node";
-import { googleStrategy } from "./providers/google";
-import { SelectUser } from "@giffer/db/models/user";
-import { SelectConnection } from "@giffer/db/models/connection";
 import { downloadFile } from "~/utils/misc";
+import { googleStrategy } from "./providers/google";
 
 export type ProviderUser = {
 	id: string;
@@ -30,9 +30,7 @@ export async function getUserId(request: Request) {
 	const authSession = await authSessionStorage.getSession(
 		request.headers.get("cookie"),
 	);
-	console.log(authSession);
 	const sessionId = authSession.get(sessionKey);
-	console.log(sessionId);
 	if (!sessionId) return null;
 	const session = await db.query.session.findFirst({
 		with: { user: true },

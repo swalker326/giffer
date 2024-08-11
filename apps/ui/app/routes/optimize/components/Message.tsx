@@ -1,8 +1,7 @@
-import { SerializeFrom } from "@remix-run/node";
+import type { SerializeFrom } from "@remix-run/node";
 import Markdown from "react-markdown";
 import { z } from "zod";
-import { cn } from "~/lib/utils";
-import { getConversationsWithMessages } from "~/models/conversation.server";
+import type { getConversationsWithMessages } from "~/models/conversation.server";
 
 const SenderSchema = z.enum(["user", "bot"]);
 export type Sender = z.infer<typeof SenderSchema>;

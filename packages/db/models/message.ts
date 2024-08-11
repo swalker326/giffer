@@ -7,7 +7,9 @@ export const message = sqliteTable("message", {
 	id: text("id").primaryKey().$defaultFn(nanoid),
 	updatedAt: int("updatedAt", { mode: "timestamp" }),
 	content: text("content").notNull(),
-	conversationId: text("conversationId").notNull(),
+	commands: text("commands"),
+	conversationId: text("conversationId"),
+	createdBy: text("createdBy").notNull(),
 	createdAt: int("createdAt", { mode: "timestamp" })
 		.notNull()
 		.default(sql`(unixepoch())`),
@@ -15,7 +17,6 @@ export const message = sqliteTable("message", {
 
 export const messageRelations = relations(message, ({ one }) => ({
 	conversation: one(conversation, {
-		relationName: "conversationToMessage",
 		fields: [message.conversationId],
 		references: [conversation.id],
 	}),

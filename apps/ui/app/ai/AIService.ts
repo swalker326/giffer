@@ -1,5 +1,8 @@
-// aiService.ts
-import type { AIAdapter, AIAdapterResponse } from "./AIAdapter";
+import type {
+	AIAdapter,
+	AIAdapterPayload,
+	AIAdapterResponse,
+} from "./AIAdapter";
 
 export class AIService {
 	private adapter: AIAdapter;
@@ -12,7 +15,7 @@ export class AIService {
 		this.adapter = adapter;
 	}
 
-	async submitPrompt(question: string): Promise<AIAdapterResponse> {
-		return this.adapter.submitPrompt(question);
+	async submitPrompt(payload: AIAdapterPayload): Promise<AIAdapterResponse> {
+		return this.adapter.submitPrompt(payload);
 	}
 }

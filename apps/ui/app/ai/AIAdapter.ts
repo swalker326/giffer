@@ -28,12 +28,25 @@ export const AIResponseSchema = z
 			return z.NEVER;
 		}
 	});
+
 const AIAdapterResponseSchema = z.object({
 	response: AIResponseSchema,
 	safetyCheckPassed: z.boolean(),
 });
 export type AIAdapterResponse = z.infer<typeof AIAdapterResponseSchema>;
 
+type AIAdapterPromptPayload = {
+	prompt: string;
+};
+type AIAdapterPromptWithMediaPayload = {
+	prompt: string;
+	media: File;
+	mediaMimeType: string;
+};
+export type AIAdapterPayload =
+	| AIAdapterPromptPayload
+	| AIAdapterPromptWithMediaPayload;
+
 export interface AIAdapter {
-	submitPrompt(question: string): Promise<AIAdapterResponse>;
+	submitPrompt(payload: AIAdapterPayload): Promise<AIAdapterResponse>;
 }

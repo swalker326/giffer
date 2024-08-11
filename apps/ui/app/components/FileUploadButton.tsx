@@ -1,8 +1,8 @@
-import { FetcherWithComponents } from "@remix-run/react";
-import { Button } from "./ui/button";
-import React from "react";
-import { SerializeFrom } from "@remix-run/node";
+import type { SerializeFrom } from "@remix-run/node";
+import type { FetcherWithComponents } from "@remix-run/react";
 import { LoaderCircleIcon } from "lucide-react";
+import React from "react";
+import { Button } from "./ui/button";
 
 export function FileUploadButton({
 	icon,
@@ -41,6 +41,7 @@ export function FileUploadButton({
 				onChange={handleChange}
 			/>
 			<Button
+				variant="outline"
 				type="button"
 				onClick={() => {
 					inputRef.current?.click();

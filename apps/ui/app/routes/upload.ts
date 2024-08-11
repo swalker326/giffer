@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs, UploadHandlerPart } from "@remix-run/node";
 import { json, unstable_parseMultipartFormData } from "@remix-run/node";
+import type { IStorageProvider } from "~/storage/IStorageProvider";
 import { StorageFactory } from "~/storage/StorageFactory";
-import { IStorageProvider } from "~/storage/IStorageProvider";
 
 const uploadHandler = async (
 	payload: UploadHandlerPart,
