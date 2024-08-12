@@ -41,6 +41,7 @@ export function FileUploadButton({
 				onChange={handleChange}
 			/>
 			<Button
+				size={"icon"}
 				variant="outline"
 				type="button"
 				onClick={() => {

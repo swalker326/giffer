@@ -1,4 +1,9 @@
-import { relations, sql } from "drizzle-orm";
+import {
+	type InferInsertModel,
+	type InferSelectModel,
+	relations,
+	sql,
+} from "drizzle-orm";
 import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid";
 import { conversation } from "./conversation";
@@ -21,3 +26,6 @@ export const messageRelations = relations(message, ({ one }) => ({
 		references: [conversation.id],
 	}),
 }));
+
+export type SelectMessage = InferSelectModel<typeof message>;
+export type InsertMessage = InferInsertModel<typeof message>;
