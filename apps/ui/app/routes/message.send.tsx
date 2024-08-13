@@ -3,10 +3,10 @@ import { db } from "@giffer/db";
 import { conversation } from "@giffer/db/models/conversation";
 import { message as messageTable } from "@giffer/db/models/message";
 
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { type LoaderFunctionArgs, json } from "@remix-run/node";
 import type { AIAdapterPayload } from "~/ai/AIAdapter";
 import { AIService } from "~/ai/AIService";
-import { VertexAdapter } from "~/ai/VertexAdapter.server";
+import { AnthropicAdapter } from "~/ai/ClaudeAdapter.server";
 import { MessageSchema } from "~/routes/optimize/components/ConversationInput";
 import { requireUserId } from "~/services/auth.server";
 
@@ -28,7 +28,8 @@ export async function action({ request }: LoaderFunctionArgs) {
 			.returning({ id: conversation.id });
 		conversationId = id;
 	}
-	const aiService = new AIService(new VertexAdapter());
+	const aiService = new AIService(new AnthropicAdapter());
+	// const aiService = new AIService(new VertexAdapter());
 	const aiRequest: AIAdapterPayload = {
 		prompt: submission.value.prompt,
 		...(submission.value.fileUrl ? { media: submission.value.fileUrl } : null),

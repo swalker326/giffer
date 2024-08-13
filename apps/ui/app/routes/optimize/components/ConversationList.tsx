@@ -1,5 +1,5 @@
 import type { SerializeFrom } from "@remix-run/node";
-import { Link, NavLink, useFetcher, useNavigate } from "@remix-run/react";
+import { NavLink, useFetcher, useNavigate } from "@remix-run/react";
 import { EditIcon } from "lucide-react";
 import React from "react";
 import { Button } from "~/components/ui/button";
@@ -22,7 +22,7 @@ export function ConversationList({
 		}
 	}, [createConversationFetcher.data, navigate]);
 	return (
-		<div className="space-2 h-full bg-gray-100 w-64 relative px-2 py-12">
+		<div className="hidden md:block space-2 h-full bg-gray-100 relative px-2 py-12">
 			<createConversationFetcher.Form
 				action="/conversation/create"
 				method="POST"

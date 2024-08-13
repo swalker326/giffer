@@ -5,12 +5,13 @@ import {
 	json,
 } from "@remix-run/node";
 import { useFetchers, useLoaderData } from "@remix-run/react";
-import Markdown from "react-markdown";
-import { requireUserId } from "../services/auth.server";
-import { cn } from "~/lib/utils";
-import { BotIcon, CopyIcon } from "lucide-react";
+import { BotIcon } from "lucide-react";
 import React from "react";
+import Markdown from "react-markdown";
 import { useAutoScroll } from "~/hooks/useAutoScroll";
+import { cn } from "~/lib/utils";
+import { CodeBlock } from "~/routes/optimize/components/CodeBlock";
+import { requireUserId } from "../services/auth.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const conversationId = params.conversationId;
@@ -58,69 +59,41 @@ export default function Optimize() {
 	}, [messages, scrollToBottom]);
 
 	return (
-		<div ref={containerRef} className="grow overflow-y-auto p-4 w-full ">
-			{messages.map((message) => (
-				<div
-					key={message.id}
-					className={cn(
-						`${message.createdBy === "ai" ? "bg-transparent rounded-lg" : "bg-gray-200 self-end rounded-lg rounded-br-none"} p-3 flex gap-3`,
-					)}
-				>
-					{message.createdBy === "ai" && (
-						<BotIcon className="text-purple-500 w-8 h-8" />
-					)}
-					<div className="prose">
-						<Markdown>{message.content}</Markdown>
-						{message.commands
-							? JSON.parse(message.commands).map(
-									(command: string, index: number) => (
-										<Markdown
-											components={{
-												code: (props) => {
-													const { node, children, ...rest } = props;
-													return <CodeBlock>{children}</CodeBlock>;
-												},
-											}}
-											key={`${message.id}-command-${index}`}
-										>{`	${command}`}</Markdown>
-									),
-								)
-							: null}
+		<div ref={containerRef} className="grow overflow-y-auto p-4 w-full">
+			<div className="sm:container sm:max-w-4xl sm:mx-auto flex flex-col">
+				{messages.map((message) => (
+					<div
+						key={message.id}
+						className={cn(
+							`${message.createdBy === "ai" ? "bg-transparent rounded-lg self-start" : "bg-gray-200 self-end rounded-lg rounded-br-none max-w-[75%]"} p-3 flex gap-3 `,
+						)}
+					>
+						{message.createdBy === "ai" && (
+							<BotIcon className="text-purple-500 w-8 h-8" />
+						)}
+						<div
+							className={`${message.createdBy !== "ai" && "max-w-[75%]"} prose prose-sm sm:prose lg:prose-lg max-w-full mx-auto px-4`}
+						>
+							<Markdown>{message.content}</Markdown>
+							{message.commands
+								? JSON.parse(message.commands).map(
+										(command: string, index: number) => (
+											<Markdown
+												components={{
+													code: (props) => {
+														const { node, children, ...rest } = props;
+														return <CodeBlock>{children}</CodeBlock>;
+													},
+												}}
+												key={`${message.id}-command-${index}`}
+											>{`	${command}`}</Markdown>
+										),
+									)
+								: null}
+						</div>
 					</div>
-				</div>
-			))}
+				))}
+			</div>
 		</div>
 	);
 }
-
-const CodeBlock = ({ children }: { children?: React.ReactNode }) => {
-	const [isCopied, setIsCopied] = React.useState(false);
-	React.useEffect(() => {
-		if (isCopied) {
-			const timeout = setTimeout(() => {
-				setIsCopied(false);
-			}, 2000);
-			return () => {
-				clearTimeout(timeout);
-			};
-		}
-	}, [isCopied]);
-	return (
-		<div className="relative">
-			{isCopied ? (
-				<span className="absolute -top-5 right-0 text-gray-400 rounded-lg h-4">
-					Copied!
-				</span>
-			) : (
-				<CopyIcon
-					className="absolute right-1 -top-4 w-4 h-4 text-gray-400 cursor-pointer"
-					onClick={() => {
-						navigator.clipboard.writeText((children as string).trim());
-						setIsCopied(true);
-					}}
-				/>
-			)}
-			<pre className="bg-gray-800 text-white p-1 rounded-lg">{children}</pre>
-		</div>
-	);
-};

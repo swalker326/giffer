@@ -1,8 +1,8 @@
+import type { SerializeFrom } from "@remix-run/node";
 import type { FetcherWithComponents } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
-import { useEffect, useState } from "react";
 import type { AppData } from "@remix-run/react/dist/data";
-import type { SerializeFrom } from "@remix-run/node";
+import { useEffect, useState } from "react";
 
 /**
  * A higher-order function that creates a new FetcherWithComponentsReset instance, which extends the FetcherWithComponents interface.

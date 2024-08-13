@@ -1,5 +1,5 @@
 // hooks/useAutoScroll.ts
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useAutoScroll() {
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -8,7 +8,10 @@ export function useAutoScroll() {
 
 	const scrollToBottom = useCallback(() => {
 		if (containerRef.current && shouldAutoScroll) {
-			containerRef.current.scrollTop = containerRef.current.scrollHeight;
+			containerRef.current.scrollTo({
+				top: containerRef.current.scrollHeight,
+				behavior: "smooth",
+			});
 		}
 	}, [shouldAutoScroll]);
 

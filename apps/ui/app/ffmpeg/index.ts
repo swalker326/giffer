@@ -1,5 +1,4 @@
-import { exec, type ExecOptions } from "node:child_process";
-import path from "node:path";
+import { type ExecOptions, exec } from "node:child_process";
 
 /**
  * Executes a shell command and returns a Promise that resolves with the command's output.

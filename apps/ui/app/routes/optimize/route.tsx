@@ -4,7 +4,6 @@ import { getConversationsWithMessages } from "~/models/conversation.server";
 import { requireUserId } from "~/services/auth.server";
 import { ConversationInput } from "./components/ConversationInput";
 import { ConversationList } from "./components/ConversationList";
-import React from "react";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const userId = await requireUserId(request, { redirectTo: "/login" });

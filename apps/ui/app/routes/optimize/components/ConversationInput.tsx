@@ -1,4 +1,4 @@
-import { getTextareaProps, useForm } from "@conform-to/react";
+import { useForm } from "@conform-to/react";
 import { getZodConstraint, parseWithZod } from "@conform-to/zod";
 import { useFetcher, useNavigate, useParams } from "@remix-run/react";
 import {
@@ -7,14 +7,14 @@ import {
 	PaperclipIcon,
 	XIcon,
 } from "lucide-react";
+import React from "react";
 import { z } from "zod";
 import { FileUploadButton } from "~/components/FileUploadButton";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
-import type { action as uploadAction } from "~/routes/upload";
-import type { action as sendMessageAction } from "~/routes/message.send";
-import React from "react";
 import { useFetcherWithReset } from "~/hooks/useFetcherWithReset";
+import type { action as sendMessageAction } from "~/routes/message.send";
+import type { action as uploadAction } from "~/routes/upload";
 
 export const MessageSchema = z.object({
 	conversationId: z.string().optional(),
@@ -55,69 +55,71 @@ export function ConversationInput() {
 		}
 	}, [aiFetcher.data, navigate]);
 	return (
-		<aiFetcher.Form
-			ref={formRef}
-			action="/message/send"
-			method="POST"
-			className="py-1 bg-white"
-			onSubmit={() => {
-				fields.prompt.value = "";
-			}}
-		>
-			<input type="hidden" name="conversationId" value={conversationId} />
-			<input
-				type="hidden"
-				name="fileUrl"
-				value={fileUploadFetcher.data?.file}
-			/>
-			<div className="flex gap-3 items-center pb-3 bg-gray-200 text-lg rounded-md p-3">
-				{fileUploadFetcher.data?.file && (
-					<div className="relative">
+		<div className="sm:container sm:max-w-4xl sm:mx-auto py-4">
+			<aiFetcher.Form
+				ref={formRef}
+				action="/message/send"
+				method="POST"
+				onSubmit={() => {
+					textAreaRef.current?.focus();
+					textAreaRef.current?.select();
+				}}
+			>
+				<input type="hidden" name="conversationId" value={conversationId} />
+				<input
+					type="hidden"
+					name="fileUrl"
+					value={fileUploadFetcher.data?.file}
+				/>
+				<div className="flex gap-3 items-center pb-3 bg-gray-200 md:text-lg sm:rounded-md p-2">
+					{fileUploadFetcher.data?.file && (
+						<div className="relative">
+							<Button
+								size="icon"
+								variant="outline"
+								className="absolute -top-2 -right-2 rounded-full w-5 h-5"
+							>
+								<XIcon
+									onClick={() => {
+										fileUploadFetcher.reset();
+									}}
+								/>
+							</Button>
+							<img
+								alt="uploaded file preview"
+								src={fileUploadFetcher.data.file}
+								className="w-12 h-12"
+							/>
+						</div>
+					)}
+					<Textarea
+						ref={textAreaRef}
+						// {...getTextareaProps(fields.prompt)}
+						name="prompt"
+						className="w-full border-none bg-transparent resize-none text-lg"
+						placeholder="What do you want to do?"
+					/>
+					<div id={fields.prompt.errorId}>{fields.prompt.errors}</div>
+					<div className="flex flex-col gap-1 justify-between">
+						<FileUploadButton
+							fetcher={fileUploadFetcher}
+							action="/upload"
+							icon={<PaperclipIcon />}
+						/>
 						<Button
 							size="icon"
-							variant="outline"
-							className="absolute -top-2 -right-2 rounded-full w-5 h-5"
+							disabled={aiFetcher.state !== "idle"}
+							type="submit"
 						>
-							<XIcon
-								onClick={() => {
-									fileUploadFetcher.reset();
-								}}
-							/>
+							{aiFetcher.state === "idle" ? (
+								<ForwardIcon />
+							) : (
+								<LoaderCircleIcon className="animate-spin" />
+							)}
 						</Button>
-						<img
-							alt="uploaded file preview"
-							src={fileUploadFetcher.data.file}
-							className="w-12 h-12"
-						/>
 					</div>
-				)}
-				<Textarea
-					ref={textAreaRef}
-					// {...getTextareaProps(fields.prompt)}
-					name="prompt"
-					className="w-full border-none bg-transparent resize-none text-lg"
-					placeholder="What do you want to do?"
-				/>
-				<div id={fields.prompt.errorId}>{fields.prompt.errors}</div>
-				<div className="flex flex-col gap-1 justify-between">
-					<FileUploadButton
-						fetcher={fileUploadFetcher}
-						action="/upload"
-						icon={<PaperclipIcon />}
-					/>
-					<Button
-						size="icon"
-						disabled={aiFetcher.state !== "idle"}
-						type="submit"
-					>
-						{aiFetcher.state === "idle" ? (
-							<ForwardIcon />
-						) : (
-							<LoaderCircleIcon className="animate-spin" />
-						)}
-					</Button>
 				</div>
-			</div>
-		</aiFetcher.Form>
+			</aiFetcher.Form>
+		</div>
 	);
 }
