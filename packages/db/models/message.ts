@@ -12,8 +12,10 @@ export const message = sqliteTable("message", {
 	id: text("id").primaryKey().$defaultFn(nanoid),
 	updatedAt: int("updatedAt", { mode: "timestamp" }),
 	content: text("content").notNull(),
-	commands: text("commands"),
-	conversationId: text("conversationId"),
+	commands: text("commands", { mode: "json" }).$type<string[]>(),
+	conversationId: text("conversationId").references(() => conversation.id, {
+		onDelete: "cascade",
+	}),
 	createdBy: text("createdBy").notNull(),
 	createdAt: int("createdAt", { mode: "timestamp" })
 		.notNull()

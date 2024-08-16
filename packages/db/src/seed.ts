@@ -4,10 +4,11 @@ import { schema } from "../models/schema";
 export async function seed() {
 	const conversation = await db
 		.insert(schema.conversation)
-		.values({ userId: "1" })
+		.values({ userId: "1", label: "Test Conversation" })
 		.returning();
 	await db.insert(schema.message).values({
 		content: "Hello, World!",
+		createdBy: "1",
 		conversationId: conversation[0].id,
 	});
 	const conversationWithMessages = await db.query.conversation.findFirst({

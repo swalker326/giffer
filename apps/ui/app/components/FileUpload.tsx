@@ -72,7 +72,7 @@ export function FileUpload({
 								<LoaderIcon />
 							</div>
 						) : (
-							"Convert"
+							"Upload"
 						)}
 					</button>
 				</div>

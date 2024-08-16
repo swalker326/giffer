@@ -10,9 +10,14 @@ import { AnthropicAdapter } from "~/ai/ClaudeAdapter.server";
 import { MessageSchema } from "~/routes/optimize/components/ConversationInput";
 import { requireUserId } from "~/services/auth.server";
 
+const isPremiumUser = (userId: string) => {
+	return true;
+};
+
 export async function action({ request }: LoaderFunctionArgs) {
 	const formData = await request.formData();
 	const userId = await requireUserId(request, { redirectTo: "/login" });
+	const isPrem = isPremiumUser(userId);
 	const submission = parseWithZod(formData, { schema: MessageSchema });
 	if (submission.status !== "success") {
 		return submission.reply();
@@ -43,7 +48,7 @@ export async function action({ request }: LoaderFunctionArgs) {
 	await db.insert(messageTable).values({
 		conversationId,
 		content: response.response.explanation,
-		commands: JSON.stringify(response.response.commands),
+		commands: response.response.commands,
 		createdBy: "ai",
 	});
 

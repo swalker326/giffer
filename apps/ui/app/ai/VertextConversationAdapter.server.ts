@@ -29,7 +29,6 @@ export class VertexConversationAdapter implements AIAdapter {
 
 	async submitPrompt(payload: AIAdapterPayload): Promise<AIAdapterResponse> {
 		const resp = await this.chat.sendMessage(payload.prompt);
-		console.log("::RESP", resp.response.candidates[0]?.content?.parts[0]?.text);
 		const vertexResponse = await resp.response;
 		//TODO: better error handling
 		if (

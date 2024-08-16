@@ -1,6 +1,6 @@
 import type { ErrorBoundaryComponent } from "node_modules/@sentry/remix/build/types/utils/vendor/types";
 import { useEffect, useRef, useState } from "react";
-import loop from "/assets/loop.gif";
+import loop from "/assets/loop.mp4";
 import { ConvertForm } from "./convert";
 
 export default function Index() {
@@ -24,7 +24,7 @@ export default function Index() {
 	});
 
 	return (
-		<main className="relative flex min-h-screen justify-center bg-white px-2 py-4">
+		<main className="relative flex min-h-screen justify-center bg-white px-2 py-4 w-full">
 			<div className="mx-auto flex flex-col justify-between">
 				<div>
 					<div>
@@ -56,7 +56,13 @@ export default function Index() {
 									>
 										Download
 									</button>
-									<img style={{ width: "400px" }} src={file} alt="gif" />
+									<video
+										loop
+										muted
+										autoPlay
+										style={{ width: "400px" }}
+										src={file}
+									/>
 								</a>
 							</div>
 						)}

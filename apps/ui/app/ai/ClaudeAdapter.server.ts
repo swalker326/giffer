@@ -34,7 +34,6 @@ export class AnthropicAdapter implements AIAdapter {
 				response: { ...parsedResponse },
 				safetyCheckPassed: true,
 			};
-			console.log("::RESPONSE", contentResponse);
 			return contentResponse;
 		}
 		throw new Error("No content found");

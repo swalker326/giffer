@@ -36,10 +36,6 @@ export class VertexAdapter implements AIAdapter {
 		) {
 			throw new Error("No content found");
 		}
-		console.log(
-			"VERTEX RESPONSE: ",
-			vertexResponse.candidates?.[0]?.content.parts[0]?.text,
-		);
 		const parsedResponse = AIResponseSchema.parse(
 			vertexResponse.candidates[0].content.parts[0].text,
 		);
