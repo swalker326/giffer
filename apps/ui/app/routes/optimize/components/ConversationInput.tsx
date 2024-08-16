@@ -12,6 +12,7 @@ import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import type { action as sendMessageAction } from "~/routes/message.send";
 import type { action as uploadAction } from "~/routes/upload";
+import { MediaPreview } from "./MediaPreview";
 
 export const MessageSchema = z.object({
 	conversationId: z.string().optional(),
@@ -82,11 +83,7 @@ export function ConversationInput() {
 									}}
 								/>
 							</Button>
-							<img
-								alt="uploaded file preview"
-								src={URL.createObjectURL(files[0])}
-								className="w-12 h-12"
-							/>
+							<MediaPreview fileList={files} />
 						</div>
 					)}
 					<input
