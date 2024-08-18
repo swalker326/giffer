@@ -16,6 +16,7 @@ export const message = sqliteTable("message", {
 	conversationId: text("conversationId").references(() => conversation.id, {
 		onDelete: "cascade",
 	}),
+	media: text("media"),
 	createdBy: text("createdBy").notNull(),
 	createdAt: int("createdAt", { mode: "timestamp" })
 		.notNull()

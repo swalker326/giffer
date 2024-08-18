@@ -13,33 +13,35 @@ const execAsync = promisify(exec);
 
 // 1. Function to write an AsyncIterable<Uint8Array> to a file
 export async function writeAsyncIterableToFile(
-	asyncIterable: AsyncIterable<Uint8Array>,
-	filePath: string,
-): Promise<void> {
-	const writeStream = fsSync.createWriteStream(filePath);
-	let hasData = false;
+		filePath: string,
+		asyncIterable: AsyncIterable<Uint8Array>,
+	): Promise<void> {
+		const writeStream = fsSync.createWriteStream(filePath);
+		let hasData = false;
 
-	for await (const chunk of asyncIterable) {
-		hasData = true;
-		if (!writeStream.write(chunk)) {
-			await new Promise<void>((resolve) => writeStream.once("drain", resolve));
+		for await (const chunk of asyncIterable) {
+			hasData = true;
+			if (!writeStream.write(chunk)) {
+				await new Promise<void>((resolve) =>
+					writeStream.once("drain", resolve),
+				);
+			}
+		}
+
+		await new Promise<void>((resolve, reject) => {
+			writeStream.end((err: unknown) => {
+				if (err) reject(err);
+				else resolve();
+			});
+		});
+
+		if (!hasData) {
+			await fsSync.promises.unlink(filePath); // Ensure the empty file is removed
+			throw new Error(
+				"The provided AsyncIterable<Uint8Array> did not yield any data.",
+			);
 		}
 	}
-
-	await new Promise<void>((resolve, reject) => {
-		writeStream.end((err: unknown) => {
-			if (err) reject(err);
-			else resolve();
-		});
-	});
-
-	if (!hasData) {
-		await fsSync.promises.unlink(filePath); // Ensure the empty file is removed
-		throw new Error(
-			"The provided AsyncIterable<Uint8Array> did not yield any data.",
-		);
-	}
-}
 
 // // 2. Function to generate the FFmpeg command
 export function generateFFmpegCommand(
@@ -101,10 +103,10 @@ export async function runFFmpegCommand(
 	}
 
 	const inputFilePath = path.join(tempDir, `input.${extension}`);
-	// TODO: Fix me file name
 	const outputFilePath = path.join(tempDir, outputFilePathString[0]);
+	const outputFileExtension = outputFilePath.split(".").pop();
 
-	await writeAsyncIterableToFile(inputData, inputFilePath);
+	await writeAsyncIterableToFile(inputFilePath, inputData);
 
 	const ffmpegCommand = generateFFmpegCommand(
 		command,
@@ -149,5 +151,5 @@ export async function uploadFileToStorage(
 		destination: "uploads",
 		name: uploadFileName,
 	});
-	return { url: await storageProvider.getSignedUrl(fileName), id };
+	return { url: await storageProvider.getSignedUrl(uploadFileName), id };
 }

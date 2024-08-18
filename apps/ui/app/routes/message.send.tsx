@@ -1,29 +1,57 @@
-import { parseWithZod } from "@conform-to/zod";
 import { db } from "@giffer/db";
 import { conversation } from "@giffer/db/models/conversation";
 import { message as messageTable } from "@giffer/db/models/message";
-
-import { type LoaderFunctionArgs, json } from "@remix-run/node";
-import type { AIAdapterPayload } from "~/ai/AIAdapter";
+import {
+	type ActionFunctionArgs,
+	type LoaderFunctionArgs,
+	json,
+	unstable_defineAction,
+} from "@remix-run/node";
+import { z } from "zod";
 import { AIService } from "~/ai/AIService";
 import { AnthropicAdapter } from "~/ai/ClaudeAdapter.server";
-import { MessageSchema } from "~/routes/optimize/components/ConversationInput";
+import { VertexAdapter } from "~/ai/VertexAdapter.server";
+import { runFFmpegCommand } from "~/ffmpeg/ffmpeg.server";
 import { requireUserId } from "~/services/auth.server";
+import { asyncIterableUint8ArraySchema } from "~/utils/asyncIterableUInt8Array";
+import { parseRequest } from "~/utils/request.server";
 
 const isPremiumUser = (userId: string) => {
 	return true;
 };
 
-export async function action({ request }: LoaderFunctionArgs) {
-	const formData = await request.formData();
+const MessageSendRequestPayloadSchema = z.object({
+	conversationId: z.string().optional(),
+	prompt: z.string(),
+	uploadedFile: z.object({
+		filename: z.string(),
+		size: z.number(),
+		data: asyncIterableUint8ArraySchema,
+	}),
+});
+type MessageSendRequestPayload = z.infer<
+	typeof MessageSendRequestPayloadSchema
+>;
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+	// const formData = await request.formData();
 	const userId = await requireUserId(request, { redirectTo: "/login" });
-	const isPrem = isPremiumUser(userId);
-	const submission = parseWithZod(formData, { schema: MessageSchema });
-	if (submission.status !== "success") {
-		return submission.reply();
+	const submission = await parseRequest<MessageSendRequestPayload>(request, {
+		schema: MessageSendRequestPayloadSchema,
+	});
+	if (submission.success === false) {
+		console.error(submission.error.errors);
+		throw new Error("Invalid submission");
 	}
-	let conversationId = submission.value.conversationId;
-	if (!submission.value.conversationId) {
+
+	const {
+		conversationId: initialConversationId,
+		prompt,
+		uploadedFile,
+	} = submission.data;
+	console.log("::SUBMission", submission.data);
+	let conversationId = initialConversationId;
+	if (!conversationId) {
 		const [{ id }] = await db
 			.insert(conversation)
 			.values({
@@ -33,28 +61,34 @@ export async function action({ request }: LoaderFunctionArgs) {
 			.returning({ id: conversation.id });
 		conversationId = id;
 	}
-	const aiService = new AIService(new AnthropicAdapter());
-	// const aiService = new AIService(new VertexAdapter());
-	const aiRequest: AIAdapterPayload = {
-		prompt: submission.value.prompt,
-		...(submission.value.fileUrl ? { media: submission.value.fileUrl } : null),
-	};
 	await db.insert(messageTable).values({
-		conversationId,
-		content: submission.value.prompt,
+		conversationId: conversationId,
+		content: prompt,
 		createdBy: userId,
 	});
-	const response = await aiService.submitPrompt(aiRequest);
+	const isPrem = isPremiumUser(userId);
+
+	// const aiService = new AIService(new AnthropicAdapter());
+	const aiService = new AIService(new VertexAdapter());
+	const response = await aiService.submitPrompt({ prompt });
 	await db.insert(messageTable).values({
 		conversationId,
 		content: response.response.explanation,
 		commands: response.response.commands,
 		createdBy: "ai",
 	});
+	const command = response.response.commands[0];
+	const result = await runFFmpegCommand(
+		command,
+		uploadedFile.data,
+		uploadedFile.filename,
+	);
 
 	return json({
-		...submission,
+		status: "success",
 		conversationId,
-		didCreateConversation: !submission.value.conversationId,
+
+		convertedFileUrl: result.url,
+		didCreateConversation: !initialConversationId,
 	});
-}
+};

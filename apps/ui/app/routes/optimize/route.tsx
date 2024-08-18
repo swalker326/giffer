@@ -14,7 +14,6 @@ export const loader = unstable_defineLoader(
 	async ({ request }: LoaderFunctionArgs) => {
 		const userId = await requireUserId(request, { redirectTo: "/login" });
 		const conversations = getConversationsWithMessages(userId);
-		console.log("::CONVOS", conversations);
 		return {
 			conversations,
 		};

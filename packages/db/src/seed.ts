@@ -2,19 +2,27 @@ import { db } from "./index";
 import { schema } from "../models/schema";
 
 export async function seed() {
-	const conversation = await db
-		.insert(schema.conversation)
-		.values({ userId: "1", label: "Test Conversation" })
-		.returning();
-	await db.insert(schema.message).values({
+	const message = await db.insert(schema.message).values({
 		content: "Hello, World!",
-		createdBy: "1",
-		conversationId: conversation[0].id,
+		createdBy: "ai",
+		commands: [
+			'ffmpeg -i input.mp4 -vf "fps=10,scale=320:-1:flags=lanczos" -c:v gif output.gif',
+		],
+		conversationId: "akP_W3GrB0HRccKCTMM4k",
 	});
-	const conversationWithMessages = await db.query.conversation.findFirst({
-		with: { messages: true },
-	});
-	console.log(conversationWithMessages);
+	// const conversation = await db
+	// 	.insert(schema.conversation)
+	// 	.values({ userId: "1", label: "Test Conversation" })
+	// 	.returning();
+	// await db.insert(schema.message).values({
+	// 	content: "Hello, World!",
+	// 	createdBy: "1",
+	// 	conversationId: conversation[0].id,
+	// });
+	// const conversationWithMessages = await db.query.conversation.findFirst({
+	// 	with: { messages: true },
+	// });
+	// console.log(conversationWithMessages);
 }
 // export async function seed() {
 // 	console.time("🔑 Created permissions...");
