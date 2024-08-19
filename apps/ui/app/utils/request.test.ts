@@ -1,98 +1,49 @@
-// import { describe, expect, it } from "vitest";
-// import { ReadableStream as PolyFillReadableStream } from "web-streams-polyfill";
-// import { readableStreamToAsyncIterable } from "./request.server";
+import { describe, it, expect, vi } from "vitest";
+import * as os from "node:os";
+import * as path from "node:path";
+import * as fsync from "node:fs";
+import { writeStreamToFile } from "./request.server";
 
-// describe("readableStreamToAsyncIterable", () => {
-// 	it("should correctly calculate the size of the stream and yield chunks", async () => {
-// 		// Prepare some test data
-// 		const chunks = [
-// 			new Uint8Array([1, 2, 3]),
-// 			new Uint8Array([4, 5, 6, 7, 8]),
-// 			new Uint8Array([9]),
-// 		];
+// Mocking os, path, and fsync
+vi.mock("node:os");
+vi.mock("node:path");
+vi.mock("node:fs");
 
-// 		// Create a mock ReadableStream from the chunks
-// 		const readableStream = new PolyFillReadableStream<Uint8Array>({
-// 			start(controller) {
-// 				// biome-ignore lint/complexity/noForEach: <explanation>
-// 				chunks.forEach((chunk) => controller.enqueue(chunk));
-// 				controller.close();
-// 			},
-// 		}) as unknown as ReadableStream<Uint8Array>;
-
-// 		// Call the function
-// 		const { asyncIterable, size } =
-// 			await readableStreamToAsyncIterable(readableStream);
-
-// 		// Check the size
-// 		expect(size).toBe(9);
-
-// 		// Collect the chunks yielded by the async iterable
-// 		const receivedChunks: Uint8Array[] = [];
-// 		for await (const chunk of asyncIterable) {
-// 			receivedChunks.push(chunk);
-// 		}
-
-// 		// Check that the received chunks match the input chunks
-// 		expect(receivedChunks).toEqual(chunks);
-// 	});
-
-// 	it("should handle an empty stream correctly", async () => {
-// 		// Create an empty ReadableStream
-// 		const readableStream = new ReadableStream({
-// 			start(controller) {
-// 				controller.close();
-// 			},
-// 		});
-
-// 		// Call the function
-// 		const { asyncIterable, size } =
-// 			await readableStreamToAsyncIterable(readableStream);
-
-// 		// Check the size
-// 		expect(size).toBe(0);
-
-// 		// Collect the chunks yielded by the async iterable
-// 		const receivedChunks: Uint8Array[] = [];
-// 		for await (const chunk of asyncIterable) {
-// 			receivedChunks.push(chunk);
-// 		}
-
-// 		// Check that no chunks were yielded
-// 		expect(receivedChunks).toHaveLength(0);
-// 	});
-// });
-
-import { ReadableStream as PolyFillReadableStream } from "web-streams-polyfill";
-import { describe, it, expect } from "vitest";
-import { readableStreamToAsyncIterable } from "./request.server";
-
-describe("readableStreamToAsyncIterable", () => {
-	it("should correctly calculate the size of the stream and yield chunks", async () => {
-		const chunks = [
-			new Uint8Array([1, 2, 3]),
-			new Uint8Array([4, 5, 6, 7, 8]),
-			new Uint8Array([9]),
-		];
-
-		const readableStream = new PolyFillReadableStream({
+describe("writeStreamToFile", () => {
+	it("should write a stream to a file and return size and path", async () => {
+		// Arrange
+		const mockStream = new ReadableStream({
 			start(controller) {
-				// biome-ignore lint/complexity/noForEach: <explanation>
-				chunks.forEach((chunk) => controller.enqueue(chunk));
+				controller.enqueue(new Uint8Array([1, 2, 3]));
 				controller.close();
 			},
-		}) as unknown as ReadableStream<Uint8Array>;
+		});
+		const mockFilename = "testfile.txt";
+		const mockTmpDir = "/tmp";
+		const mockTmpFilename = path.join(mockTmpDir, mockFilename);
+		const mockWriteStream = {
+			write: vi.fn(),
+			end: vi.fn(),
+		};
 
-		const { asyncIterable, size } =
-			await readableStreamToAsyncIterable(readableStream);
+		vi.spyOn(os, "tmpdir").mockReturnValue(mockTmpDir);
+		vi.spyOn(path, "join").mockReturnValue(mockTmpFilename);
+		vi.spyOn(fsync, "createWriteStream").mockReturnValue(
+			mockWriteStream as unknown as fsync.WriteStream,
+		);
 
-		expect(size).toBe(9);
+		// Act
+		const result = await writeStreamToFile(
+			mockFilename,
+			mockStream as unknown as ReadableStream<Uint8Array>,
+		);
 
-		const receivedChunks: Uint8Array[] = [];
-		for await (const chunk of asyncIterable) {
-			receivedChunks.push(chunk);
-		}
-
-		expect(receivedChunks).toEqual(chunks);
+		// Assert
+		expect(result).toEqual({ size: 3, path: mockTmpFilename });
+		expect(mockWriteStream.write).toHaveBeenCalledTimes(1);
+		expect(mockWriteStream.write).toHaveBeenCalledWith(
+			new Uint8Array([1, 2, 3]),
+		);
+		expect(mockWriteStream.end).toHaveBeenCalled();
 	});
 });

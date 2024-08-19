@@ -8,7 +8,8 @@
 		"deploy:ui:prod": "fly deploy --config ./apps/ui/fly.toml --dockerfile ./Dockerfile.ui",
 		"dev": "turbo dev",
 		"start": "turbo run start",
-		"typecheck": "turbo typecheck"
+		"typecheck": "turbo typecheck",
+		"test": "turbo test"
 	},
 	"keywords": [],
 	"author": "",

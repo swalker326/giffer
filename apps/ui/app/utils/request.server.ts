@@ -1,74 +1,93 @@
+import * as os from "node:os";
+import * as path from "node:path";
+import * as fsync from "node:fs";
 import { parseMultipartRequest } from "@mjackson/multipart-parser";
-import { type SafeParseReturnType, z } from "zod";
+import type { ZodTypeAny } from "zod";
+import { parseWithZod } from "@conform-to/zod";
 
-export const parseRequest = async <T>(
+export const parseRequest = async <Schema extends ZodTypeAny>(
 	request: Request,
-	{ schema }: { schema: Zod.Schema },
-): Promise<SafeParseReturnType<T, T>> => {
-	const responseObject = {} as Record<string, unknown>;
+	{ schema }: { schema: Schema },
+) => {
+	const responseObject = new FormData();
 	for await (const part of parseMultipartRequest(request, {
-		maxFileSize: 10000000,
+		maxFileSize: 55000000,
 	})) {
 		if (!part.name) {
 			continue;
 		}
 
 		if (part.isFile) {
-			const { asyncIterable, size } = await readableStreamToAsyncIterable(
+			if (!part.filename) {
+				throw new Error("Received a file part without a filename");
+			}
+			const { size, path } = await writeStreamToFile(
+				part.filename,
 				await part.body,
 			);
-			responseObject[part.name] = {
-				filename: part.filename,
-				size: size,
-				data: asyncIterable,
-			};
+			if (size !== 0) {
+				const payload = {
+					filename: part.filename,
+					size: size,
+					path: path,
+				};
+				responseObject.append(part.name, JSON.stringify(payload));
+			}
 		} else {
-			responseObject[part.name] = await part.text();
+			console.log("part.name", part.name);
+			responseObject.append(part.name, await part.text());
 		}
 	}
-	console.log("::RESPONSE OBJECT", responseObject);
-	return schema.safeParse(responseObject);
+	return parseWithZod<Schema>(responseObject, { schema });
 };
 
-export async function readableStreamToAsyncIterable(
-	readableStream: ReadableStream<Uint8Array>,
-): Promise<{ asyncIterable: AsyncIterable<Uint8Array>; size: number }> {
-	let totalSize = 0;
+export async function writeStreamToFile(
+	filename: string,
+	stream: ReadableStream<Uint8Array>,
+) {
+	const tmpDir = os.tmpdir();
+	const tmpFilename = path.join(tmpDir, filename);
+	const file = fsync.createWriteStream(tmpFilename);
+	let bytesWritten = 0;
 
-	const asyncIterable = {
-		async *[Symbol.asyncIterator]() {
-			const reader = readableStream.getReader();
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) {
-					console.log("Stream reading done.");
-					break;
-				}
-				if (value) {
-					totalSize += value.length;
-					console.log(`Chunk received: ${value.length} bytes`);
-					yield value;
-				}
-			}
-		},
-	};
-
-	// Create an array to store the chunks for later use
-	const chunks: Uint8Array[] = [];
-
-	// Iterate over the asyncIterable to calculate the size and collect chunks
-	for await (const chunk of asyncIterable) {
-		chunks.push(chunk);
+	//@ts-expect-error - The stream is not a Node.js stream
+	for await (const chunk of stream) {
+		file.write(chunk);
+		bytesWritten += chunk.byteLength;
 	}
 
-	// Create a new asyncIterable that will yield the collected chunks
-	const finalIterable = {
-		async *[Symbol.asyncIterator]() {
-			for (const chunk of chunks) {
-				yield chunk;
-			}
-		},
-	};
+	file.end();
 
-	return { asyncIterable: finalIterable, size: totalSize };
+	return { size: bytesWritten, path: tmpFilename };
 }
+
+// use for debugging
+// async function stringifyReadableStreamBody(request: Request): Promise<string> {
+// 	const reader = request.body?.getReader();
+// 	const decoder = new TextDecoder();
+// 	let result = "";
+// 	if (!reader) {
+// 		return result;
+// 	}
+
+// 	while (true) {
+// 		const { done, value } = await reader.read();
+// 		if (done) break;
+// 		result += decoder.decode(value, { stream: true });
+// 	}
+
+// 	// Final decode to ensure any remaining bits are flushed
+// 	result += decoder.decode();
+
+// 	return result;
+// }
+
+// async function logRequestBody(request: Request) {
+// 	try {
+// 		const bodyString = await stringifyReadableStreamBody(request);
+// 		console.log("Request body:");
+// 		console.log(bodyString);
+// 	} catch (error) {
+// 		console.error("Error reading request body:", error);
+// 	}
+// }

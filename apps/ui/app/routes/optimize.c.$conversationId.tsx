@@ -9,6 +9,8 @@ import { cn } from "~/lib/utils";
 import { CodeBlock } from "~/routes/optimize/components/CodeBlock";
 import { requireUserId } from "../services/auth.server";
 import { fetchConversationMessages } from "~/models/messages.server";
+import { MediaMessage } from "./optimize/components/MediaMessage";
+import { StorageFactory } from "~/storage/StorageFactory";
 
 export const loader = unstable_defineLoader(async ({ request, params }) => {
 	const conversationId = params.conversationId;
@@ -16,6 +18,7 @@ export const loader = unstable_defineLoader(async ({ request, params }) => {
 		throw new Error("No conversation ID provided");
 	}
 	await requireUserId(request, { redirectTo: "/login" });
+	const messages = await fetchConversationMessages(conversationId);
 
 	return {
 		messages: fetchConversationMessages(conversationId),
@@ -24,7 +27,6 @@ export const loader = unstable_defineLoader(async ({ request, params }) => {
 
 export default function Optimize() {
 	const loaderData = useLoaderData<typeof loader>();
-	const fetchers = useFetchers();
 	// const optimisticMessages = fetchers.reduce<message[]>((memo, fetcher) => {
 	// 	if (fetcher.formData) {
 	// 		if (fetcher.key !== "message.send") {
@@ -71,6 +73,9 @@ export default function Optimize() {
 										className={`${message.createdBy !== "ai" && "max-w-[75%]"} prose prose-sm sm:prose lg:prose-lg max-w-full mx-auto px-4`}
 									>
 										<Markdown>{message.content}</Markdown>
+										{message.media && typeof message.media === "object" ? (
+											<MediaMessage media={message.media} />
+										) : null}
 										{message.commands?.map((command: string, index: number) => (
 											<Markdown
 												components={{

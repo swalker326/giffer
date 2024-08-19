@@ -9,6 +9,7 @@
 		"dev": "remix vite:dev",
 		"check": "biome check app",
 		"start": "remix-serve ./build/server/index.js",
+		"test": "vitest",
 		"typecheck": "tsc"
 	},
 	"dependencies": {
@@ -22,6 +23,7 @@
 		"@google-cloud/vertexai": "^1.4.0",
 		"@libsql/client": "^0.5.6",
 		"@libsql/darwin-arm64": "^0.4.1",
+		"@mjackson/headers": "^0.6.1",
 		"@mjackson/multipart-parser": "^0.4.2",
 		"@radix-ui/react-alert-dialog": "^1.1.1",
 		"@radix-ui/react-dialog": "^1.1.1",

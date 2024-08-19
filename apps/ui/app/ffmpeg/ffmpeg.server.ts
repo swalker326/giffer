@@ -2,13 +2,11 @@ import { exec } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as fsSync from "node:fs";
+import * as os from "node:os";
 import { promisify } from "node:util";
-import { fileURLToPath } from "node:url";
 import { StorageFactory } from "~/storage/StorageFactory";
 import { nanoid } from "nanoid";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const execAsync = promisify(exec);
 
 // 1. Function to write an AsyncIterable<Uint8Array> to a file
@@ -50,17 +48,17 @@ export function generateFFmpegCommand(
 	outputFile: string,
 ): string {
 	let command = origCommand;
-	const inputRegex = /input\.[a-z0-9]+/i;
-	const outputRegex = /output\.[a-z0-9]+/i;
-	command = command.replace(inputRegex, (match) => {
+	const inputRegex = /input\.[a-z0-9]+/gi;
+	const outputRegex = /output\.[a-z0-9]+/gi;
+	command = command.replaceAll(inputRegex, (match) => {
 		const extension = match.split(".").pop(); // Extract the extension
 		return `${inputFile.replace(/\.[^/.]+$/, "")}.${extension}`;
 	});
-	command = command.replace(outputRegex, (match) => {
+	command = command.replaceAll(outputRegex, (match) => {
 		const extension = match.split(".").pop(); // Extract the extension
 		return `${outputFile.replace(/\.[^/.]+$/, "")}.${extension}`;
 	});
-
+	console.log("::command", command);
 	return command;
 }
 
@@ -85,28 +83,20 @@ export async function* readFileAsAsyncIterable(
 	await fs.unlink(filePath); // Clean up the file after reading
 }
 
-export async function runFFmpegCommand(
-	command: string,
-	inputData: AsyncIterable<Uint8Array>,
-	fileName: string,
-) {
-	const extension = fileName.split(".").pop();
+export async function runFFmpegCommand(command: string, inputFilePath: string) {
+	const extension = inputFilePath.split(".").pop();
 	if (!extension) {
 		throw new Error("No extension found in the file name");
 	}
-	const tempDir = path.join(__dirname, "tmp");
-	await fs.mkdir(tempDir, { recursive: true });
 
 	const outputFilePathString = command.match(/output\.[a-z0-9]+/i);
 	if (!outputFilePathString) {
 		throw new Error("No output file path found in the command");
 	}
-
-	const inputFilePath = path.join(tempDir, `input.${extension}`);
-	const outputFilePath = path.join(tempDir, outputFilePathString[0]);
-	const outputFileExtension = outputFilePath.split(".").pop();
-
-	await writeAsyncIterableToFile(inputFilePath, inputData);
+	const tmpDir = os.tmpdir();
+	console.log("::tmpDir", tmpDir);
+	const outputFilePath = path.join(tmpDir, outputFilePathString[0]);
+	const fileName = path.basename(outputFilePath);
 
 	const ffmpegCommand = generateFFmpegCommand(
 		command,
@@ -135,21 +125,22 @@ export async function runFFmpegCommand(
 
 // 6.upload file to storage
 export async function uploadFileToStorage(
-	data: AsyncIterable<Uint8Array>,
-	provider: string,
-	bucketName: string,
-	fileName: string,
-): Promise<{ url: string; id: string }> {
-	const storageProvider = StorageFactory.createStorageProvider(
-		provider,
-		bucketName,
-	);
-	const id = nanoid();
-	const uploadFileName = `${id}-${fileName}`;
-	await storageProvider.uploadFile({
-		data: data,
-		destination: "uploads",
-		name: uploadFileName,
-	});
-	return { url: await storageProvider.getSignedUrl(uploadFileName), id };
-}
+		data: AsyncIterable<Uint8Array>,
+		provider: string,
+		bucketName: string,
+		fileName: string,
+	): Promise<{ fileName: string }> {
+		const storageProvider = StorageFactory.createStorageProvider(
+			provider,
+			bucketName,
+		);
+		const id = nanoid();
+		const uploadFileName = `${id}-${fileName}`;
+		console.log("::uploadFileName", uploadFileName);
+		await storageProvider.uploadFile({
+			data: data,
+			destination: "uploads",
+			name: uploadFileName,
+		});
+		return { fileName: uploadFileName };
+	}
