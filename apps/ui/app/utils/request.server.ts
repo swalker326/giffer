@@ -19,7 +19,7 @@ export const parseRequest = async <Schema extends ZodTypeAny>(
 
 		if (part.isFile) {
 			if (!part.filename) {
-				throw new Error("Received a file part without a filename");
+				continue;
 			}
 			const { size, path } = await writeStreamToFile(
 				part.filename,
@@ -34,7 +34,6 @@ export const parseRequest = async <Schema extends ZodTypeAny>(
 				responseObject.append(part.name, JSON.stringify(payload));
 			}
 		} else {
-			console.log("part.name", part.name);
 			responseObject.append(part.name, await part.text());
 		}
 	}

@@ -4,6 +4,7 @@ import { message as messageTable } from "@giffer/db/models/message";
 import { unstable_defineAction } from "@remix-run/node";
 import { z } from "zod";
 import { AIService } from "~/ai/AIService";
+import { OpenAIAdapter } from "~/ai/OpenAIAdapter";
 import { VertexAdapter } from "~/ai/VertexAdapter.server";
 import { runFFmpegCommand } from "~/ffmpeg/ffmpeg.server";
 import { requireUserId } from "~/services/auth.server";
@@ -13,25 +14,26 @@ const isPremiumUser = (userId: string) => {
 	return true;
 };
 
-const UploadedFileSchema = z.object({
+const ParsedFileJsonSchema = z.object({
 	name: z.string(),
 	filename: z.string(),
 	size: z.number(),
 	path: z.string(),
 });
+export const FileSchema = z
+	.string()
+	.transform((str, ctx): z.infer<typeof ParsedFileJsonSchema> => {
+		try {
+			return JSON.parse(str);
+		} catch (e) {
+			ctx.addIssue({ code: "custom", message: "Invalid uploaded file JSON" });
+			return z.NEVER;
+		}
+	});
 const MessageSendRequestPayloadSchema = z.object({
 	conversationId: z.string().nullable(),
 	prompt: z.string(),
-	uploadedFile: z
-		.string()
-		.transform((str, ctx): z.infer<typeof UploadedFileSchema> => {
-			try {
-				return JSON.parse(str);
-			} catch (e) {
-				ctx.addIssue({ code: "custom", message: "Invalid uploaded file JSON" });
-				return z.NEVER;
-			}
-		}),
+	uploadedFile: FileSchema.optional(),
 });
 
 export type MessageSendRequestPayload = z.infer<
@@ -73,11 +75,17 @@ export const action = unstable_defineAction(async ({ request }) => {
 	const isPrem = isPremiumUser(userId);
 
 	// const aiService = new AIService(new AnthropicAdapter());
-	const aiService = new AIService(new VertexAdapter());
+	const aiService = new AIService(new OpenAIAdapter());
+	// const aiService = new AIService(new VertexAdapter());
 	const response = await aiService.submitPrompt({ prompt });
 	const command = response.response.commands[0];
-	console.log("command", command);
 	if (!uploadedFile) {
+		await db.insert(messageTable).values({
+			conversationId,
+			content: response.response.explanation,
+			commands: response.response.commands,
+			createdBy: "ai",
+		});
 		return {
 			status: "success",
 			conversationId,
@@ -86,6 +94,7 @@ export const action = unstable_defineAction(async ({ request }) => {
 		};
 	}
 	const result = await runFFmpegCommand(command, uploadedFile.path);
+	console.log("::result", result);
 	await db.insert(messageTable).values({
 		conversationId,
 		content: response.response.explanation,

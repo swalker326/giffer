@@ -78,7 +78,6 @@ describe("FFmpeg Utility Functions", () => {
 				'ffmpeg -i input.mp4 -vf "scale=320:240" -i input.mp4 output.gif';
 			const inputFilePath = path.join(tmpDir, "input.mp4");
 			const outputFilePath = path.join(tmpDir, "output.gif");
-			console.log("::outputFile", outputFilePath);
 			const result = generateFFmpegCommand(
 				command,
 				inputFilePath,
