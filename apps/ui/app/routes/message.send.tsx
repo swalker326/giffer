@@ -86,12 +86,11 @@ export const action = unstable_defineAction(
 		if (uploadedFile) {
 			result = await runFFmpegCommand(command, uploadedFile.path);
 		}
-
 		await db.insert(messageTable).values({
 			conversationId,
 			content: response.response.explanation,
 			commands: response.response.commands,
-			...(result.fileName ? { uploadedFile: result.fileName } : {}),
+			...(result.fileName ? { media: result.fileName } : {}),
 			createdBy: "ai",
 		});
 

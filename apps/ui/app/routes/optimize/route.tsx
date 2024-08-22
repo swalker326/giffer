@@ -23,11 +23,11 @@ export default function OptimizeRoute() {
 
 	return (
 		<div className="h-screen flex bg-white w-full">
-			{/* <Suspense fallback={<div>Loading Conversations</div>}>
-				<Await resolve={loaderData.conversations}> */}
-			{/* {(data) => <ConversationList conversations={data} />}
+			<Suspense fallback={<div>Loading Conversations</div>}>
+				<Await resolve={loaderData.conversations}>
+					{(data) => <ConversationList conversations={data} />}
 				</Await>
-			</Suspense> */}
+			</Suspense>
 			<div className="flex flex-col h-screen w-full">
 				<Outlet />
 				<ConversationInput />
