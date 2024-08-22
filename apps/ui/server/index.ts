@@ -12,6 +12,7 @@ const app = fastify();
 await app.register(remixFastify);
 
 const port = Number(process.env.PORT) || 3000;
+// TODO: Fix this, when deploying we need to go to 0.0.0.0 and locally we need to go to go to 127
 // const host = process.env.HOST === "true" ? "0.0.0.0" : "127.0.0.1";
 const host = "0.0.0.0";
 
