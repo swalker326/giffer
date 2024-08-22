@@ -5,7 +5,6 @@ import {
 	PencilIcon,
 	SidebarCloseIcon,
 	SidebarOpen,
-	XIcon,
 } from "lucide-react";
 import React from "react";
 import { Button } from "~/components/ui/button";
@@ -102,14 +101,6 @@ export function ConversationList({
 												>
 													<PencilIcon className="hidden group-hover:block w-5 h-5" />
 												</button>
-
-												{/* <button
-										type="button"
-										className="p-1 hover:bg-gray-300 rounded-full"
-										onClick={(() = setConfirm(true))}
-									>
-										<XIcon className=" text-red-600 hidden group-hover:block w-5 h-5" />
-									</button> */}
 											</div>
 											<DeleteConfirmationAlert
 												cancelText="No Cancel"

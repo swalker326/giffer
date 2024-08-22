@@ -6,10 +6,10 @@ import * as os from "node:os";
 import { promisify } from "node:util";
 import { StorageFactory } from "~/storage/StorageFactory";
 import { nanoid } from "nanoid";
+import { FFMPEGError } from "./FFMPEGError";
 
 const execAsync = promisify(exec);
 
-// 1. Function to write an AsyncIterable<Uint8Array> to a file
 export async function writeAsyncIterableToFile(
 	filePath: string,
 	asyncIterable: AsyncIterable<Uint8Array>,
@@ -61,14 +61,12 @@ export function generateFFmpegCommand(
 
 export async function executeFFmpegCommand(command: string): Promise<void> {
 	try {
-		console.log("::command", command);
 		await execAsync(`${command} -y`);
 	} catch (error) {
-		console.log("::error", error);
 		if (error instanceof Error) {
-			throw new Error(`Failed to execute FFmpeg command: ${error.message}`);
+			throw new FFMPEGError(error.message, command);
 		}
-		throw new Error("Failed to execute FFmpeg command");
+		throw new FFMPEGError("An unknown error executing FFMPEG Command", command);
 	}
 }
 

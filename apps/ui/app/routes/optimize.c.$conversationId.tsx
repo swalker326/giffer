@@ -54,8 +54,8 @@ export default function Optimize() {
 	}, [loaderData.messages, scrollToBottom]);
 
 	return (
-		<div ref={containerRef} className="grow overflow-y-auto p-4 w-full">
-			<div className="sm:container sm:max-w-4xl sm:mx-auto flex flex-col">
+		<div ref={containerRef} className="overflow-y-auto w-full overflow-x-clip">
+			<div className="sm:container sm:max-w-4xl sm:mx-auto flex flex-col gap-1">
 				<Suspense fallback={<div>Loading Messages</div>}>
 					<Await resolve={loaderData.messages}>
 						{(messages) =>
@@ -63,12 +63,12 @@ export default function Optimize() {
 								<div
 									key={message.id}
 									className={cn(
-										`${message.createdBy === "ai" ? "bg-transparent rounded-lg self-start" : "bg-gray-200 self-end rounded-lg rounded-br-none max-w-[75%]"} p-3 flex gap-3 `,
+										`${message.createdBy === "ai" ? "bg-transparent rounded-lg self-start" : "bg-gray-200 self-end rounded-lg rounded-br-none"} p-3 flex gap-3 `,
 									)}
 								>
-									{message.createdBy === "ai" && (
-										<BotIcon className="text-purple-500 w-8 h-8" />
-									)}
+									{/* {message.createdBy === "ai" && (
+										<BotIcon className="text-purple-500" />
+									)} */}
 									<div
 										className={`${message.createdBy !== "ai" && "max-w-[75%]"} prose prose-sm sm:prose lg:prose-lg max-w-full mx-auto px-4`}
 									>

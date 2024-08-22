@@ -1,8 +1,4 @@
-import {
-	type LoaderFunctionArgs,
-	json,
-	unstable_defineLoader,
-} from "@remix-run/node";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 import { Await, Outlet, useLoaderData } from "@remix-run/react";
 import { getConversationsWithMessages } from "~/models/conversation.server";
 import { requireUserId } from "~/services/auth.server";
@@ -25,11 +21,7 @@ export default function OptimizeRoute() {
 		<div className="h-screen flex bg-white w-full">
 			<Suspense fallback={<div>Loading Conversations</div>}>
 				<Await resolve={loaderData.conversations}>
-					{(data) => (
-						<div className="">
-							<ConversationList conversations={data} />
-						</div>
-					)}
+					{(data) => <ConversationList conversations={data} />}
 				</Await>
 			</Suspense>
 			<div className="flex flex-col h-screen w-full flex-1">

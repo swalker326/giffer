@@ -10,6 +10,7 @@ import { Button } from "~/components/ui/button";
 import type { action as sendMessageAction } from "~/routes/message.send";
 import { MediaPreview } from "./MediaPreview";
 import { FileUploadButton } from "~/routes/optimize/components/FileUploadButton";
+import { ErrorContainer } from "./ErrorContainer";
 
 export interface FileUploadButtonRef {
 	clearInput: () => void;
@@ -18,64 +19,45 @@ export interface FileUploadButtonRef {
 export function ConversationInput() {
 	const fileUploadButtonRef = React.useRef<FileUploadButtonRef | null>(null);
 	const aiFetcher = useFetcher<typeof sendMessageAction>();
-	const inputRef = React.useRef<HTMLInputElement>(null);
 	const [files, setFiles] = React.useState<FileList | undefined>();
-	const navigate = useNavigate();
+	const [errors, setErrors] = React.useState<
+		{ error: Error; command: string }[] | undefined
+	>();
+
+	React.useEffect(() => {
+		if (aiFetcher.state === "submitting" || aiFetcher.state === "loading") {
+			setErrors(undefined);
+		} else if (aiFetcher.state === "idle") {
+			setErrors(aiFetcher.data?.errors);
+		}
+	}, [aiFetcher.state, aiFetcher.data]);
+	const inputRef = React.useRef<HTMLInputElement>(null);
 	const params = useParams();
 	const conversationId = params.conversationId;
-	// const [form, fields] = useForm<Message>({
-	// 	// This not only syncs the error from the server
-	// 	// But is also used as the default value of the form
-	// 	// in case the document is reloaded for progressive enhancement
-	// 	// lastResult,
-	// 	// shouldValidate: "onBlur",
-	// 	shouldRevalidate: "onBlur",
-	// 	onValidate({ formData }) {
-	// 		return parseWithZod(formData, { schema: MessageSchema });
-	// 	},
-	// 	constraint: getZodConstraint(MessageSchema),
-	// });
-	// React.useEffect(() => {
-	// 	if (aiFetcher.data?.status === "success") {
-	// 		if ("didCreateConversation" in aiFetcher.data) {
-	// 			navigate(`/optimize/c/${aiFetcher.data.conversationId}`);
-	// 		}
-	// 	}
-	// }, [aiFetcher.data, navigate]);
 	return (
 		<div className="sm:container sm:max-w-4xl sm:mx-auto py-4">
-			<div className="w-full">
+			<div className="w-full relative">
+				{errors && errors.length > 0 && (
+					<ErrorContainer
+						title="We've run into some problems"
+						handleClick={() => {
+							setErrors(undefined);
+						}}
+						content={errors[0].command}
+					/>
+				)}
 				{aiFetcher.data?.formErrors && aiFetcher.data.formErrors.length > 0 && (
-					<div className="w-full border p-2 border-red-500 bg-red-200 rounded-sm">
-						<button
-							type="button"
-							onClick={() => {
-								if (aiFetcher.data?.formErrors) {
-									aiFetcher.data.formErrors = [];
-								}
-							}}
-						>
-							<XIcon />
-						</button>
-						<div>
-							{aiFetcher.data.formErrors.map((error) => (
-								<div key={error}>{error}</div>
-							))}
-						</div>
-					</div>
+					<ErrorContainer
+						title="We've run into some problems"
+						handleClick={() => {}}
+						content={aiFetcher.data.formErrors[0]}
+					/>
 				)}
 			</div>
 			<aiFetcher.Form
 				action="/message/send"
 				method="POST"
 				encType="multipart/form-data"
-				// onSubmit={form.onSubmit}
-				// id={form.id}
-				// onSubmit={(e) => {
-				// 	// form.onSubmit(e);
-				// 	inputRef.current?.focus();
-				// 	inputRef.current?.select();
-				// }}
 			>
 				<input type="hidden" name="conversationId" value={conversationId} />
 				<div className="flex gap-3 items-center md:text-lg rounded-md p-1 border">

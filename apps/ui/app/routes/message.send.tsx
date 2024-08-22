@@ -3,12 +3,14 @@ import { conversation } from "@giffer/db/models/conversation";
 import { message as messageTable } from "@giffer/db/models/message";
 import {
 	type ActionFunctionArgs,
+	redirect,
 	unstable_defineAction,
 } from "@remix-run/node";
 import { z } from "zod";
 import { AIService } from "~/ai/AIService";
 import { OpenAIAdapter } from "~/ai/OpenAIAdapter";
 import { runFFmpegCommand } from "~/ffmpeg/ffmpeg.server";
+import { FFMPEGError } from "~/ffmpeg/FFMPEGError";
 import { requireUserId } from "~/services/auth.server";
 import { parseRequest } from "~/utils/request.server";
 
@@ -44,13 +46,19 @@ export type MessageSendRequestPayload = z.infer<
 
 export const action = unstable_defineAction(
 	async ({ request }: ActionFunctionArgs) => {
+		const errors = [] as { error: Error; command: string }[];
 		const userId = await requireUserId(request, { redirectTo: "/login" });
 
 		const submission = await parseRequest(request, {
 			schema: MessageSendRequestPayloadSchema,
 		});
 		if (submission.status !== "success") {
-			return { formErrors: ["Unable to parse response from submission"] };
+			return {
+				formErrors: ["Unable to parse response from submission"],
+				errors,
+				status: "error",
+				didCreateConversation: false,
+			};
 		}
 
 		const {
@@ -84,7 +92,23 @@ export const action = unstable_defineAction(
 		const command = response.response.commands[0];
 		let result: { fileName: string } = { fileName: "" };
 		if (uploadedFile) {
-			result = await runFFmpegCommand(command, uploadedFile.path);
+			try {
+				result = await runFFmpegCommand(command, uploadedFile.path);
+			} catch (e) {
+				if (e instanceof FFMPEGError) {
+					errors.push({ error: e, command: e.command });
+				}
+				if (e instanceof Error) {
+					errors.push({ error: e, command });
+				}
+				errors.push({ error: e as FFMPEGError, command: command });
+				return {
+					formErrors: [],
+					status: "error",
+					errors,
+					didCreateConversation: !initialConversationId,
+				};
+			}
 		}
 		await db.insert(messageTable).values({
 			conversationId,
@@ -96,6 +120,7 @@ export const action = unstable_defineAction(
 
 		return {
 			formErrors: [],
+			errors,
 			status: "success",
 			conversationId,
 			didCreateConversation: !initialConversationId,
