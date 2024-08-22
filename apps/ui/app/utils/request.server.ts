@@ -14,6 +14,7 @@ export const parseRequest = async <Schema extends ZodTypeAny>(
 	for await (const part of parseMultipartRequest(request, {
 		maxFileSize: 55000000,
 	})) {
+		console.log(part);
 		if (!part.name) {
 			continue;
 		}
