@@ -9,6 +9,7 @@ export const parseRequest = async <Schema extends ZodTypeAny>(
 	request: Request,
 	{ schema }: { schema: Schema },
 ) => {
+	// logRequestBody(request);
 	const responseObject = new FormData();
 	for await (const part of parseMultipartRequest(request, {
 		maxFileSize: 55000000,
@@ -37,6 +38,7 @@ export const parseRequest = async <Schema extends ZodTypeAny>(
 			responseObject.append(part.name, await part.text());
 		}
 	}
+	console.log("RESPONSE OBJ", responseObject);
 	return parseWithZod<Schema>(responseObject, { schema });
 };
 
@@ -61,32 +63,32 @@ export async function writeStreamToFile(
 }
 
 // use for debugging
-// async function stringifyReadableStreamBody(request: Request): Promise<string> {
-// 	const reader = request.body?.getReader();
-// 	const decoder = new TextDecoder();
-// 	let result = "";
-// 	if (!reader) {
-// 		return result;
-// 	}
+async function stringifyReadableStreamBody(request: Request): Promise<string> {
+	const reader = request.body?.getReader();
+	const decoder = new TextDecoder();
+	let result = "";
+	if (!reader) {
+		return result;
+	}
 
-// 	while (true) {
-// 		const { done, value } = await reader.read();
-// 		if (done) break;
-// 		result += decoder.decode(value, { stream: true });
-// 	}
+	while (true) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		result += decoder.decode(value, { stream: true });
+	}
 
-// 	// Final decode to ensure any remaining bits are flushed
-// 	result += decoder.decode();
+	// Final decode to ensure any remaining bits are flushed
+	result += decoder.decode();
 
-// 	return result;
-// }
+	return result;
+}
 
-// async function logRequestBody(request: Request) {
-// 	try {
-// 		const bodyString = await stringifyReadableStreamBody(request);
-// 		console.log("Request body:");
-// 		console.log(bodyString);
-// 	} catch (error) {
-// 		console.error("Error reading request body:", error);
-// 	}
-// }
+async function logRequestBody(request: Request) {
+	try {
+		const bodyString = await stringifyReadableStreamBody(request);
+		console.log("Request body:");
+		console.log(bodyString);
+	} catch (error) {
+		console.error("Error reading request body:", error);
+	}
+}

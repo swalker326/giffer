@@ -1,11 +1,13 @@
 import { db } from "@giffer/db";
 import { conversation } from "@giffer/db/models/conversation";
 import { message as messageTable } from "@giffer/db/models/message";
-import { unstable_defineAction } from "@remix-run/node";
+import {
+	type ActionFunctionArgs,
+	unstable_defineAction,
+} from "@remix-run/node";
 import { z } from "zod";
 import { AIService } from "~/ai/AIService";
 import { OpenAIAdapter } from "~/ai/OpenAIAdapter";
-import { VertexAdapter } from "~/ai/VertexAdapter.server";
 import { runFFmpegCommand } from "~/ffmpeg/ffmpeg.server";
 import { requireUserId } from "~/services/auth.server";
 import { parseRequest } from "~/utils/request.server";
@@ -40,72 +42,64 @@ export type MessageSendRequestPayload = z.infer<
 	typeof MessageSendRequestPayloadSchema
 >;
 
-export const action = unstable_defineAction(async ({ request }) => {
-	const userId = await requireUserId(request, { redirectTo: "/login" });
-	const submission = await parseRequest(request, {
-		schema: MessageSendRequestPayloadSchema,
-	});
-	if (submission.status !== "success") {
-		console.error(submission.reply());
-		throw new Error("Invalid submission");
-	}
+export const action = unstable_defineAction(
+	async ({ request }: ActionFunctionArgs) => {
+		const userId = await requireUserId(request, { redirectTo: "/login" });
 
-	const {
-		prompt,
-		uploadedFile,
-		conversationId: initialConversationId,
-	} = submission.value;
+		const submission = await parseRequest(request, {
+			schema: MessageSendRequestPayloadSchema,
+		});
+		if (submission.status !== "success") {
+			return { formErrors: ["Unable to parse response from submission"] };
+		}
 
-	let conversationId = initialConversationId || null;
-	if (!conversationId) {
-		const [{ id }] = await db
-			.insert(conversation)
-			.values({
-				label: "New Conversation",
-				userId,
-			})
-			.returning({ id: conversation.id });
-		conversationId = id;
-	}
-	await db.insert(messageTable).values({
-		conversationId: conversationId,
-		content: prompt,
-		createdBy: userId,
-	});
-	const isPrem = isPremiumUser(userId);
+		const {
+			prompt,
+			uploadedFile,
+			conversationId: initialConversationId,
+		} = submission.value;
 
-	// const aiService = new AIService(new AnthropicAdapter());
-	const aiService = new AIService(new OpenAIAdapter());
-	// const aiService = new AIService(new VertexAdapter());
-	const response = await aiService.submitPrompt({ prompt });
-	const command = response.response.commands[0];
-	if (!uploadedFile) {
+		let conversationId = initialConversationId || null;
+		if (!conversationId) {
+			const [{ id }] = await db
+				.insert(conversation)
+				.values({
+					label: "New Conversation",
+					userId,
+				})
+				.returning({ id: conversation.id });
+			conversationId = id;
+		}
+		await db.insert(messageTable).values({
+			conversationId: conversationId,
+			content: prompt,
+			createdBy: userId,
+		});
+		const isPrem = isPremiumUser(userId);
+
+		// const aiService = new AIService(new AnthropicAdapter());
+		// const aiService = new AIService(new VertexAdapter());
+		const aiService = new AIService(new OpenAIAdapter());
+		const response = await aiService.submitPrompt({ prompt });
+		const command = response.response.commands[0];
+		let result: { fileName: string } = { fileName: "" };
+		if (uploadedFile) {
+			result = await runFFmpegCommand(command, uploadedFile.path);
+		}
+
 		await db.insert(messageTable).values({
 			conversationId,
 			content: response.response.explanation,
 			commands: response.response.commands,
+			...(result.fileName ? { uploadedFile: result.fileName } : {}),
 			createdBy: "ai",
 		});
+
 		return {
+			formErrors: [],
 			status: "success",
 			conversationId,
-			commands: response.response.commands,
 			didCreateConversation: !initialConversationId,
 		};
-	}
-	const result = await runFFmpegCommand(command, uploadedFile.path);
-	console.log("::result", result);
-	await db.insert(messageTable).values({
-		conversationId,
-		content: response.response.explanation,
-		commands: response.response.commands,
-		media: result.fileName,
-		createdBy: "ai",
-	});
-
-	return {
-		status: "success",
-		conversationId,
-		didCreateConversation: !initialConversationId,
-	};
-});
+	},
+);

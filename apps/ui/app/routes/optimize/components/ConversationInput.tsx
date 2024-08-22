@@ -1,5 +1,3 @@
-import { getInputProps, useForm } from "@conform-to/react";
-import { getZodConstraint, parseWithZod } from "@conform-to/zod";
 import { useFetcher, useNavigate, useParams } from "@remix-run/react";
 import {
 	ForwardIcon,
@@ -8,23 +6,18 @@ import {
 	XIcon,
 } from "lucide-react";
 import React from "react";
-import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import type { action as sendMessageAction } from "~/routes/message.send";
-import type { action as uploadAction } from "~/routes/upload";
 import { MediaPreview } from "./MediaPreview";
+import { FileUploadButton } from "~/routes/optimize/components/FileUploadButton";
 
-export const MessageSchema = z.object({
-	conversationId: z.string().optional(),
-	prompt: z.string(),
-	file: z.instanceof(File, { message: "You must upload a file" }).optional(),
-});
-type Message = z.infer<typeof MessageSchema>;
+export interface FileUploadButtonRef {
+	clearInput: () => void;
+}
 
 export function ConversationInput() {
 	const fileUploadButtonRef = React.useRef<FileUploadButtonRef | null>(null);
 	const aiFetcher = useFetcher<typeof sendMessageAction>();
-	console.log(aiFetcher.data);
 	const inputRef = React.useRef<HTMLInputElement>(null);
 	const [files, setFiles] = React.useState<FileList | undefined>();
 	const navigate = useNavigate();
@@ -42,15 +35,36 @@ export function ConversationInput() {
 	// 	},
 	// 	constraint: getZodConstraint(MessageSchema),
 	// });
-	React.useEffect(() => {
-		if (aiFetcher.data?.status === "success") {
-			if ("didCreateConversation" in aiFetcher.data) {
-				navigate(`/optimize/c/${aiFetcher.data.conversationId}`);
-			}
-		}
-	}, [aiFetcher.data, navigate]);
+	// React.useEffect(() => {
+	// 	if (aiFetcher.data?.status === "success") {
+	// 		if ("didCreateConversation" in aiFetcher.data) {
+	// 			navigate(`/optimize/c/${aiFetcher.data.conversationId}`);
+	// 		}
+	// 	}
+	// }, [aiFetcher.data, navigate]);
 	return (
 		<div className="sm:container sm:max-w-4xl sm:mx-auto py-4">
+			<div className="w-full">
+				{aiFetcher.data?.formErrors && aiFetcher.data.formErrors.length > 0 && (
+					<div className="w-full border p-2 border-red-500 bg-red-200 rounded-sm">
+						<button
+							type="button"
+							onClick={() => {
+								if (aiFetcher.data?.formErrors) {
+									aiFetcher.data.formErrors = [];
+								}
+							}}
+						>
+							<XIcon />
+						</button>
+						<div>
+							{aiFetcher.data.formErrors.map((error) => (
+								<div key={error}>{error}</div>
+							))}
+						</div>
+					</div>
+				)}
+			</div>
 			<aiFetcher.Form
 				action="/message/send"
 				method="POST"
@@ -115,59 +129,3 @@ export function ConversationInput() {
 		</div>
 	);
 }
-export interface FileUploadButtonRef {
-	clearInput: () => void;
-}
-
-const FileUploadButton = React.forwardRef<
-	FileUploadButtonRef,
-	{
-		name: string;
-		onFileChange: (files: FileList) => void;
-		buttonChildren: React.ReactNode;
-	}
->(({ onFileChange, buttonChildren, name }, ref) => {
-	const fileInputRef = React.useRef<HTMLInputElement | null>(null);
-
-	React.useImperativeHandle(ref, () => ({
-		clearInput: () => {
-			if (fileInputRef.current) {
-				fileInputRef.current.value = "";
-			}
-		},
-	}));
-
-	const handleButtonClick = () => {
-		fileInputRef.current?.click();
-	};
-
-	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const files = event.target.files;
-		if (!files) {
-			return;
-		}
-		if (files.length > 0) {
-			onFileChange(files);
-		}
-	};
-
-	return (
-		<div>
-			<input
-				onClick={(event) => {
-					//Strange issue: https://stackoverflow.com/questions/12030686/html-input-file-selection-event-not-firing-upon-selecting-the-same-file
-					const el = event.target as HTMLInputElement;
-					el.value = "";
-				}}
-				ref={fileInputRef}
-				type="file"
-				name={name}
-				className="hidden"
-				onChange={handleFileChange}
-			/>
-			<Button size="icon" type="button" onClick={handleButtonClick}>
-				{buttonChildren}
-			</Button>
-		</div>
-	);
-});

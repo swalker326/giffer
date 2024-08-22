@@ -10,26 +10,24 @@ import { ConversationInput } from "./components/ConversationInput";
 import { ConversationList } from "./components/ConversationList";
 import { Suspense } from "react";
 
-export const loader = unstable_defineLoader(
-	async ({ request }: LoaderFunctionArgs) => {
-		const userId = await requireUserId(request, { redirectTo: "/login" });
-		const conversations = getConversationsWithMessages(userId);
-		return {
-			conversations,
-		};
-	},
-);
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+	const userId = await requireUserId(request, { redirectTo: "/login" });
+	const conversations = getConversationsWithMessages(userId);
+	return {
+		conversations,
+	};
+};
 
 export default function OptimizeRoute() {
 	const loaderData = useLoaderData<typeof loader>();
 
 	return (
 		<div className="h-screen flex bg-white w-full">
-			<Suspense fallback={<div>Loading Conversations</div>}>
-				<Await resolve={loaderData.conversations}>
-					{(data) => <ConversationList conversations={data} />}
+			{/* <Suspense fallback={<div>Loading Conversations</div>}>
+				<Await resolve={loaderData.conversations}> */}
+			{/* {(data) => <ConversationList conversations={data} />}
 				</Await>
-			</Suspense>
+			</Suspense> */}
 			<div className="flex flex-col h-screen w-full">
 				<Outlet />
 				<ConversationInput />
